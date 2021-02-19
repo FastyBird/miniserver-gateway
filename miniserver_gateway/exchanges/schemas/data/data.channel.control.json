@@ -1,0 +1,61 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "definitions" : {
+    "types" : {
+      "nullable_string" : {
+        "oneOf" : [
+          {
+            "type" : "null"
+          },
+          {
+            "type" : "string"
+          }
+        ]
+      }
+    },
+    "control" : {
+      "type" : "string",
+      "enum" : [
+        "reset"
+      ]
+    }
+  },
+  "type" : "object",
+  "properties" : {
+    "id" : {
+      "type" : "string",
+      "description" : "Entity uuid v4 identifier. This identifier is unique"
+    },
+    "control" : {
+      "$ref" : "#/definitions/control"
+    },
+    "expected" : {
+      "$ref" : "#/definitions/types/nullable_string"
+    },
+    "device" : {
+      "type" : "string",
+      "description" : "Device identifier used across services. Could be used as identifier & is unique."
+    },
+    "owner" : {
+      "type" : "string",
+      "description" : "Device owner uuid v4 identifier."
+    },
+    "parent" : {
+      "$ref" : "#/definitions/types/nullable_string",
+      "default" : null,
+      "description" : "Parent device identifier used across services."
+    },
+    "channel" : {
+      "type" : "string",
+      "description" : "Channel identifier used across services."
+    }
+  },
+  "required" : [
+    "id",
+    "control",
+    "device",
+    "owner",
+    "parent",
+    "channel"
+  ]
+}
