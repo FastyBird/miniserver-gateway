@@ -53,7 +53,6 @@ class LibrariesUtils:
 
             extensions_paths: List[str] = [
                 path.abspath(base_dir + "/connectors/".replace("/", path.sep) + extension_type.lower()),
-                path.abspath(base_dir + "/miniserver_gateway/connectors/".replace("/", path.sep) + extension_type.lower()),
             ]
 
             extension_class = LibrariesUtils.load_module(module_name, extensions_paths)
@@ -82,7 +81,6 @@ class LibrariesUtils:
 
             extensions_paths: List[str] = [
                 path.abspath(base_dir + "/storages/".replace("/", path.sep)),
-                path.abspath(base_dir + "/miniserver_gateway/storages/".replace("/", path.sep)),
             ]
 
             extension_class = LibrariesUtils.load_module(module_name, extensions_paths)
@@ -111,7 +109,6 @@ class LibrariesUtils:
 
             extensions_paths: List[str] = [
                 path.abspath(base_dir + "/exchanges/".replace("/", path.sep)),
-                path.abspath(base_dir + "/miniserver_gateway/exchanges/".replace("/", path.sep)),
             ]
 
             extension_class = LibrariesUtils.load_module(module_name, extensions_paths)
