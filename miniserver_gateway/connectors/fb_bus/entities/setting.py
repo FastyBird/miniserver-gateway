@@ -17,6 +17,7 @@
 # App libs
 from abc import ABC
 import uuid
+
 # App libs
 from miniserver_gateway.connectors.fb_bus.types.types import DataTypes, RegistersTypes
 
@@ -41,10 +42,7 @@ class SettingEntity(ABC):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            index: uuid.UUID,
-            device_id: uuid.UUID,
-            setting_address: int
+        self, index: uuid.UUID, device_id: uuid.UUID, setting_address: int
     ) -> None:
         self.__id = index
         self.__device_id = device_id
@@ -54,63 +52,53 @@ class SettingEntity(ABC):
 
     # -----------------------------------------------------------------------------
 
-    def get_id(
-            self
-    ) -> uuid.UUID:
+    def get_id(self) -> uuid.UUID:
         return self.__id
 
     # -----------------------------------------------------------------------------
 
-    def get_device_id(
-            self
-    ) -> uuid.UUID:
+    def get_device_id(self) -> uuid.UUID:
         return self.__device_id
 
     # -----------------------------------------------------------------------------
 
-    def get_address(
-            self
-    ) -> int:
+    def get_address(self) -> int:
         return self.__address
 
     # -----------------------------------------------------------------------------
 
-    def set_name(
-            self,
-            name: str
-    ) -> None:
+    def set_name(self, name: str) -> None:
         self.__name = name
 
     # -----------------------------------------------------------------------------
 
-    def get_name(
-            self
-    ) -> str or None:
+    def get_name(self) -> str or None:
         return self.__name
 
     # -----------------------------------------------------------------------------
 
-    def get_data_type(
-            self
-    ) -> DataTypes:
+    def get_data_type(self) -> DataTypes:
         return self.__data_type
 
     # -----------------------------------------------------------------------------
 
-    def set_data_type(
-            self,
-            data_type: DataTypes
-    ) -> None:
-        if data_type == DataTypes.FB_DATA_TYPE_UINT8 or data_type == DataTypes.FB_DATA_TYPE_INT8:
+    def set_data_type(self, data_type: DataTypes) -> None:
+        if (
+            data_type == DataTypes.FB_DATA_TYPE_UINT8
+            or data_type == DataTypes.FB_DATA_TYPE_INT8
+        ):
             self.__size = 1
 
-        elif data_type == DataTypes.FB_DATA_TYPE_UINT16 or data_type == DataTypes.FB_DATA_TYPE_INT16:
+        elif (
+            data_type == DataTypes.FB_DATA_TYPE_UINT16
+            or data_type == DataTypes.FB_DATA_TYPE_INT16
+        ):
             self.__size = 2
 
         elif (
-                data_type == DataTypes.FB_DATA_TYPE_UINT32
-                or data_type == DataTypes.FB_DATA_TYPE_INT32
-                or data_type == DataTypes.FB_DATA_TYPE_FLOAT32
+            data_type == DataTypes.FB_DATA_TYPE_UINT32
+            or data_type == DataTypes.FB_DATA_TYPE_INT32
+            or data_type == DataTypes.FB_DATA_TYPE_FLOAT32
         ):
             self.__size = 4
 
@@ -124,17 +112,12 @@ class SettingEntity(ABC):
 
     # -----------------------------------------------------------------------------
 
-    def get_value(
-            self
-    ) -> int or float or bool or None:
+    def get_value(self) -> int or float or bool or None:
         return self.__value
 
     # -----------------------------------------------------------------------------
 
-    def set_value(
-            self,
-            value: int or float or bool
-    ) -> None:
+    def set_value(self, value: int or float or bool) -> None:
         self.__value = value
 
 
@@ -165,23 +148,17 @@ class RegisterSettingEntity(SettingEntity):
     # -----------------------------------------------------------------------------
 
     def set_register(
-            self,
-            register_address: int,
-            register_type: RegistersTypes
+        self, register_address: int, register_type: RegistersTypes
     ) -> None:
         self.__register_address = register_address
         self.__register_type = register_type
 
     # -----------------------------------------------------------------------------
 
-    def get_register_address(
-            self
-    ) -> int or None:
+    def get_register_address(self) -> int or None:
         return self.__register_address
 
     # -----------------------------------------------------------------------------
 
-    def get_register_type(
-            self
-    ) -> RegistersTypes or None:
+    def get_register_type(self) -> RegistersTypes or None:
         return self.__register_type

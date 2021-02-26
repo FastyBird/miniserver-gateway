@@ -19,6 +19,7 @@ import uuid
 from abc import abstractmethod
 from pony.orm import core as orm
 from typing import Dict, Set, Tuple
+
 # App libs
 from miniserver_gateway.db.models import DevicePropertyEntity, ChannelPropertyEntity
 from miniserver_gateway.db.types import DataType
@@ -39,16 +40,16 @@ class PropertyItem:
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            property_id: uuid.UUID,
-            property_key: str,
-            property_identifier: str,
-            property_settable: bool,
-            property_queryable: bool,
-            property_data_type: DataType or None,
-            property_unit: str or None,
-            property_format: str or None,
-            device_id: uuid.UUID
+        self,
+        property_id: uuid.UUID,
+        property_key: str,
+        property_identifier: str,
+        property_settable: bool,
+        property_queryable: bool,
+        property_data_type: DataType or None,
+        property_unit: str or None,
+        property_format: str or None,
+        device_id: uuid.UUID,
     ) -> None:
         self.__id = property_id
         self.__key = property_key
@@ -64,80 +65,60 @@ class PropertyItem:
     # -----------------------------------------------------------------------------
 
     @property
-    def device(
-            self
-    ) -> uuid.UUID:
+    def device(self) -> uuid.UUID:
         return self.__device_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def property_id(
-            self
-    ) -> uuid.UUID:
+    def property_id(self) -> uuid.UUID:
         return self.__id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def key(
-            self
-    ) -> str:
+    def key(self) -> str:
         return self.__key
 
     # -----------------------------------------------------------------------------
 
     @property
-    def identifier(
-            self
-    ) -> str:
+    def identifier(self) -> str:
         return self.__identifier
 
     # -----------------------------------------------------------------------------
 
     @property
-    def settable(
-            self
-    ) -> bool:
+    def settable(self) -> bool:
         return self.__settable
 
     # -----------------------------------------------------------------------------
 
     @property
-    def queryable(
-            self
-    ) -> bool:
+    def queryable(self) -> bool:
         return self.__queryable
 
     # -----------------------------------------------------------------------------
 
     @property
-    def data_type(
-            self
-    ) -> DataType or None:
+    def data_type(self) -> DataType or None:
         return self.__data_type
 
     # -----------------------------------------------------------------------------
 
     @property
-    def unit(
-            self
-    ) -> str or None:
+    def unit(self) -> str or None:
         return self.__unit
 
     # -----------------------------------------------------------------------------
 
     @property
-    def format(
-            self
-    ) -> str or None:
+    def format(self) -> str or None:
         return self.__format
 
     # -----------------------------------------------------------------------------
 
-    def get_format(
-            self
-    ) -> Tuple[int, int] or Tuple[float, float] or Set[str]:
+    def get_format(self) -> Tuple[int, int] or Tuple[float, float] or Set[str]:
         if self.__format is None:
             return None
 
@@ -145,13 +126,21 @@ class PropertyItem:
             if self.__data_type == DataType.DATA_TYPE_INT:
                 min_value, max_value, *rest = self.__format.split(":") + [None, None]
 
-                if min_value is not None and max_value is not None and int(min_value) <= int(max_value):
+                if (
+                    min_value is not None
+                    and max_value is not None
+                    and int(min_value) <= int(max_value)
+                ):
                     return int(min_value), int(max_value)
 
             elif self.__data_type == DataType.DATA_TYPE_FLOAT:
                 min_value, max_value, *rest = self.__format.split(":") + [None, None]
 
-                if min_value is not None and max_value is not None and float(min_value) <= float(max_value):
+                if (
+                    min_value is not None
+                    and max_value is not None
+                    and float(min_value) <= float(max_value)
+                ):
                     return float(min_value), float(max_value)
 
             elif self.__data_type == DataType.DATA_TYPE_ENUM:
@@ -161,9 +150,7 @@ class PropertyItem:
 
     # -----------------------------------------------------------------------------
 
-    def to_array(
-            self
-    ) -> Dict[str, str or int or bool or None]:
+    def to_array(self) -> Dict[str, str or int or bool or None]:
         if isinstance(self.data_type, DataType):
             data_type = self.data_type.value
 
@@ -195,17 +182,17 @@ class ChannelPropertyItem(PropertyItem):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            property_id: uuid.UUID,
-            property_key: str,
-            property_identifier: str,
-            property_settable: bool,
-            property_queryable: bool,
-            property_data_type: DataType or None,
-            property_unit: str or None,
-            property_format: str or None,
-            device_id: uuid.UUID,
-            channel_id: uuid.UUID
+        self,
+        property_id: uuid.UUID,
+        property_key: str,
+        property_identifier: str,
+        property_settable: bool,
+        property_queryable: bool,
+        property_data_type: DataType or None,
+        property_unit: str or None,
+        property_format: str or None,
+        device_id: uuid.UUID,
+        channel_id: uuid.UUID,
     ) -> None:
         super().__init__(
             property_id,
@@ -216,16 +203,14 @@ class ChannelPropertyItem(PropertyItem):
             property_data_type,
             property_unit,
             property_format,
-            device_id
+            device_id,
         )
 
         self.__channel_id = channel_id
 
     # -----------------------------------------------------------------------------
 
-    def channel(
-            self
-    ) -> uuid.UUID:
+    def channel(self) -> uuid.UUID:
         return self.__channel_id
 
 
@@ -235,8 +220,7 @@ class PropertiesRepository:
     # -----------------------------------------------------------------------------
 
     def get_property_by_id(
-            self,
-            property_id: uuid.UUID
+        self, property_id: uuid.UUID
     ) -> DevicePropertyItem or ChannelPropertyItem or None:
         if len(self._cache) == 0:
             self.initialize()
@@ -249,8 +233,7 @@ class PropertiesRepository:
     # -----------------------------------------------------------------------------
 
     def get_property_by_key(
-            self,
-            property_key: str
+        self, property_key: str
     ) -> DevicePropertyItem or ChannelPropertyItem or None:
         if len(self._cache) == 0:
             self.initialize()
@@ -263,26 +246,19 @@ class PropertiesRepository:
 
     # -----------------------------------------------------------------------------
 
-    def clear_cache(
-            self
-    ) -> None:
+    def clear_cache(self) -> None:
         self._cache = {}
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def initialize(
-            self
-    ) -> None:
+    def initialize(self) -> None:
         pass
 
 
 class DevicesPropertiesCache(PropertiesRepository):
-
     @orm.db_session
-    def initialize(
-            self
-    ) -> None:
+    def initialize(self) -> None:
         for entity in DevicePropertyEntity.select():
             self._cache[entity.property_id.__str__()] = DevicePropertyItem(
                 property_id=entity.property_id,
@@ -293,16 +269,13 @@ class DevicesPropertiesCache(PropertiesRepository):
                 property_data_type=entity.data_type,
                 property_format=entity.format,
                 property_unit=entity.unit,
-                device_id=entity.device.device_id
+                device_id=entity.device.device_id,
             )
 
 
 class ChannelsPropertiesCache(PropertiesRepository):
-
     @orm.db_session
-    def initialize(
-            self
-    ) -> None:
+    def initialize(self) -> None:
         for entity in ChannelPropertyEntity.select():
             self._cache[entity.property_id.__str__()] = ChannelPropertyItem(
                 property_id=entity.property_id,
@@ -314,7 +287,7 @@ class ChannelsPropertiesCache(PropertiesRepository):
                 property_format=entity.format,
                 property_unit=entity.unit,
                 device_id=entity.channel.device.device_id,
-                channel_id=entity.channel.channel_id
+                channel_id=entity.channel.channel_id,
             )
 
 

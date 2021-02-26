@@ -22,14 +22,22 @@ from abc import ABC, abstractmethod
 from queue import Queue, Full as QueueFull
 from threading import Thread
 from typing import Dict, List, Set
+
 # App libs
 from miniserver_gateway.constants import APP_ORIGIN, LOG_LEVEL
-from miniserver_gateway.db.cache import device_property_cache, channel_property_cache, \
-    DevicePropertyItem, ChannelPropertyItem
+from miniserver_gateway.db.cache import (
+    device_property_cache,
+    channel_property_cache,
+    DevicePropertyItem,
+    ChannelPropertyItem,
+)
 from miniserver_gateway.db.events import DatabaseEntityChangedEvent
 from miniserver_gateway.events.dispatcher import app_dispatcher
 from miniserver_gateway.exchanges.events import ExchangePropertyExpectedValueEvent
-from miniserver_gateway.exchanges.queue import PublishPropertyValueQueueItem, PublishEntityQueueItem
+from miniserver_gateway.exchanges.queue import (
+    PublishPropertyValueQueueItem,
+    PublishEntityQueueItem,
+)
 from miniserver_gateway.exchanges.utils import ExchangeRoutingUtils
 from miniserver_gateway.exchanges.types import RoutingKeys
 from miniserver_gateway.storages.events import StoragePropertyStoredEvent
@@ -52,17 +60,12 @@ class ExchangeSettings:
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            config: List[Dict[str, str]]
-    ) -> None:
+    def __init__(self, config: List[Dict[str, str]]) -> None:
         self.__exchanges = config
 
     # -----------------------------------------------------------------------------
 
-    def all(
-            self
-    ) -> List[Dict[str, str]]:
+    def all(self) -> List[Dict[str, str]]:
         return self.__exchanges
 
 
@@ -87,16 +90,17 @@ class Exchanges(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            config: List[Dict[str, str]]
-    ) -> None:
+    def __init__(self, config: List[Dict[str, str]]) -> None:
         super().__init__()
 
         self.__settings = ExchangeSettings(config)
 
-        app_dispatcher.add_listener(StoragePropertyStoredEvent.EVENT_NAME, self.__publish_stored_value)
-        app_dispatcher.add_listener(DatabaseEntityChangedEvent.EVENT_NAME, self.__publish_entity)
+        app_dispatcher.add_listener(
+            StoragePropertyStoredEvent.EVENT_NAME, self.__publish_stored_value
+        )
+        app_dispatcher.add_listener(
+            DatabaseEntityChangedEvent.EVENT_NAME, self.__publish_entity
+        )
 
         # Queue for consuming incoming data from connectors
         self.__queue = Queue(maxsize=1000)
@@ -112,9 +116,7 @@ class Exchanges(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def run(
-            self
-    ) -> None:
+    def run(self) -> None:
         self.__stopped = False
 
         while True:
@@ -135,9 +137,7 @@ class Exchanges(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def close(
-            self
-    ) -> None:
+    def close(self) -> None:
         """Stop exchanges main thread"""
 
         self.__stopped = True
@@ -167,30 +167,27 @@ class Exchanges(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def process_received_message(
-            self,
-            received_data: str
-    ) -> bool:
+    def process_received_message(self, received_data: str) -> bool:
         """Process received message by sub-exchanges"""
 
         try:
             parsed_data: dict = json.loads(received_data)
 
             if (
-                    parsed_data.get("routing_key", None) is not None
-                    and isinstance(parsed_data.get("routing_key", None), str) is True
-                    and parsed_data.get("origin", None) is not None
-                    and isinstance(parsed_data.get("origin", None), str) is True
-                    and parsed_data.get("data", None) is not None
-                    and (
-                        isinstance(parsed_data.get("data", None), str) is True
-                        or isinstance(parsed_data.get("data", None), dict) is True
-                    )
+                parsed_data.get("routing_key", None) is not None
+                and isinstance(parsed_data.get("routing_key", None), str) is True
+                and parsed_data.get("origin", None) is not None
+                and isinstance(parsed_data.get("origin", None), str) is True
+                and parsed_data.get("data", None) is not None
+                and (
+                    isinstance(parsed_data.get("data", None), str) is True
+                    or isinstance(parsed_data.get("data", None), dict) is True
+                )
             ):
                 return self.__process_message(
                     parsed_data.get("routing_key", None),
                     parsed_data.get("origin", None),
-                    parsed_data.get("data", None)
+                    parsed_data.get("data", None),
                 )
 
         except json.JSONDecodeError as e:
@@ -200,102 +197,119 @@ class Exchanges(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def __publish_stored_value(
-            self,
-            event: StoragePropertyStoredEvent
-    ) -> None:
+    def __publish_stored_value(self, event: StoragePropertyStoredEvent) -> None:
         """Process storage service save event"""
 
         try:
-            if isinstance(event.record, DevicePropertyItem) or isinstance(event.record, ChannelPropertyItem):
-                self.__queue.put(PublishPropertyValueQueueItem(
-                    event.record,
-                    event.value,
-                    event.expected_value,
-                    event.is_pending,
-                ))
+            if isinstance(event.record, DevicePropertyItem) or isinstance(
+                event.record, ChannelPropertyItem
+            ):
+                self.__queue.put(
+                    PublishPropertyValueQueueItem(
+                        event.record,
+                        event.value,
+                        event.expected_value,
+                        event.is_pending,
+                    )
+                )
 
             else:
                 log.warning("Received unknown storage event")
 
         except QueueFull:
-            log.error("Exchange processing queue is full. New messages could not be added")
+            log.error(
+                "Exchange processing queue is full. New messages could not be added"
+            )
 
     # -----------------------------------------------------------------------------
 
-    def __publish_entity(
-            self,
-            event: DatabaseEntityChangedEvent
-    ) -> None:
+    def __publish_entity(self, event: DatabaseEntityChangedEvent) -> None:
         """Process database entity changed event"""
 
         try:
-            routing_key = ExchangeRoutingUtils.get_entity_routing_key(type(event.entity), event.action_type)
+            routing_key = ExchangeRoutingUtils.get_entity_routing_key(
+                type(event.entity), event.action_type
+            )
 
             if routing_key is not None:
-                self.__queue.put(PublishEntityQueueItem(
-                    routing_key,
-                    event.entity.to_array()
-                ))
+                self.__queue.put(
+                    PublishEntityQueueItem(routing_key, event.entity.to_array())
+                )
 
         except QueueFull:
-            log.error("Exchange processing queue is full. New messages could not be added")
+            log.error(
+                "Exchange processing queue is full. New messages could not be added"
+            )
 
     # -----------------------------------------------------------------------------
 
     @staticmethod
     def __process_message(
-            routing_key: str,
-            origin: str,
-            data: dict or str or None
+        routing_key: str, origin: str, data: dict or str or None
     ) -> bool:
         # Check if received message was not sent by gateway
         if origin != APP_ORIGIN:
             if (
-                    routing_key == RoutingKeys(RoutingKeys.DEVICES_PROPERTIES_DATA_ROUTING_KEY).value
-                    or routing_key == RoutingKeys(RoutingKeys.CHANNELS_PROPERTIES_DATA_ROUTING_KEY).value
+                routing_key
+                == RoutingKeys(RoutingKeys.DEVICES_PROPERTIES_DATA_ROUTING_KEY).value
+                or routing_key
+                == RoutingKeys(RoutingKeys.CHANNELS_PROPERTIES_DATA_ROUTING_KEY).value
             ):
                 # TODO: Add json validation for data
 
                 if data is not None:
-                    if routing_key == RoutingKeys(RoutingKeys.DEVICES_PROPERTIES_DATA_ROUTING_KEY).value:
-                        device_property = device_property_cache.get_property_by_key(data.get("property"))
+                    if (
+                        routing_key
+                        == RoutingKeys(
+                            RoutingKeys.DEVICES_PROPERTIES_DATA_ROUTING_KEY
+                        ).value
+                    ):
+                        device_property = device_property_cache.get_property_by_key(
+                            data.get("property")
+                        )
 
                         if device_property is not None:
                             app_dispatcher.dispatch(
                                 ExchangePropertyExpectedValueEvent.EVENT_NAME,
                                 ExchangePropertyExpectedValueEvent(
-                                    device_property,
-                                    data.get("expected")
-                                )
+                                    device_property, data.get("expected")
+                                ),
                             )
 
                             return True
 
                         else:
                             log.warning(
-                                "Received message for unknown device property: {}"
-                                .format(data.get("property"))
+                                "Received message for unknown device property: {}".format(
+                                    data.get("property")
+                                )
                             )
 
-                    elif routing_key == RoutingKeys(RoutingKeys.CHANNELS_PROPERTIES_DATA_ROUTING_KEY).value:
-                        channel_property = channel_property_cache.get_property_by_key(data.get("property"))
+                    elif (
+                        routing_key
+                        == RoutingKeys(
+                            RoutingKeys.CHANNELS_PROPERTIES_DATA_ROUTING_KEY
+                        ).value
+                    ):
+                        channel_property = channel_property_cache.get_property_by_key(
+                            data.get("property")
+                        )
 
                         if channel_property is not None:
                             app_dispatcher.dispatch(
                                 ExchangePropertyExpectedValueEvent.EVENT_NAME,
                                 ExchangePropertyExpectedValueEvent(
-                                    channel_property,
-                                    data.get("expected")
-                                )
+                                    channel_property, data.get("expected")
+                                ),
                             )
 
                             return True
 
                         else:
                             log.warning(
-                                "Received message for unknown channel property: {}"
-                                .format(data.get("property"))
+                                "Received message for unknown channel property: {}".format(
+                                    data.get("property")
+                                )
                             )
 
                 else:
@@ -306,16 +320,19 @@ class Exchanges(Thread):
     # -----------------------------------------------------------------------------
 
     def __process_property_value_record(
-            self,
-            record: PublishPropertyValueQueueItem
+        self, record: PublishPropertyValueQueueItem
     ) -> None:
         """Consume queue record with device or channel property updates"""
 
         if isinstance(record.item, DevicePropertyItem):
-            routing_key: str = RoutingKeys(RoutingKeys.DEVICES_PROPERTY_UPDATED_ENTITY_ROUTING_KEY).value
+            routing_key: str = RoutingKeys(
+                RoutingKeys.DEVICES_PROPERTY_UPDATED_ENTITY_ROUTING_KEY
+            ).value
 
         elif isinstance(record.item, ChannelPropertyItem):
-            routing_key: str = RoutingKeys(RoutingKeys.CHANNELS_PROPERTY_UPDATED_ENTITY_ROUTING_KEY).value
+            routing_key: str = RoutingKeys(
+                RoutingKeys.CHANNELS_PROPERTY_UPDATED_ENTITY_ROUTING_KEY
+            ).value
 
         else:
             # Unknown record item
@@ -331,10 +348,7 @@ class Exchanges(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def __process_entity_record(
-            self,
-            record: PublishEntityQueueItem
-    ) -> None:
+    def __process_entity_record(self, record: PublishEntityQueueItem) -> None:
         """Consume queue record with entity updates info"""
 
         for exchange in self.__exchanges:
@@ -342,9 +356,7 @@ class Exchanges(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def __load(
-            self
-    ) -> None:
+    def __load(self) -> None:
         # Reset exchanges configuration
         self.__exchanges = set()
 
@@ -354,20 +366,22 @@ class Exchanges(Thread):
 
             if exchange_classname is None:
                 log.error(
-                    "Classname for configured exchanges: {} is not configured"
-                    .format(exchange_settings.get("type"))
+                    "Classname for configured exchanges: {} is not configured".format(
+                        exchange_settings.get("type")
+                    )
                 )
 
                 continue
 
             try:
                 # Try to import exchanges class
-                exchange_class = LibrariesUtils.check_and_import_exchange(exchange_classname)
+                exchange_class = LibrariesUtils.check_and_import_exchange(
+                    exchange_classname
+                )
 
                 if exchange_class is not None:
                     exchange_module: ExchangeInterface = exchange_class(
-                        exchange_settings,
-                        self
+                        exchange_settings, self
                     )
 
                     self.__exchanges.add(exchange_module)
@@ -396,17 +410,11 @@ class ExchangeInterface(ABC):
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def close(
-            self
-    ) -> None:
+    def close(self) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def publish(
-            self,
-            routing_key: str,
-            data: dict
-    ) -> None:
+    def publish(self, routing_key: str, data: dict) -> None:
         pass

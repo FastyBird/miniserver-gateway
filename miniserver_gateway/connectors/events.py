@@ -17,6 +17,7 @@
 # App dependencies
 from abc import ABC
 from whistle import Event
+
 # App libs
 from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
 
@@ -37,10 +38,10 @@ class ConnectorPropertyValueEvent(ABC, Event):
     EVENT_NAME: str = "connectors.propertyValue"
 
     def __init__(
-            self,
-            record: DevicePropertyItem or ChannelPropertyItem,
-            actual_value: str or int or float or bool,
-            previous_value: str or int or float or bool or None
+        self,
+        record: DevicePropertyItem or ChannelPropertyItem,
+        actual_value: str or int or float or bool,
+        previous_value: str or int or float or bool or None,
     ) -> None:
         self.__record = record
         self.__actual_value = actual_value
@@ -49,23 +50,17 @@ class ConnectorPropertyValueEvent(ABC, Event):
     # -----------------------------------------------------------------------------
 
     @property
-    def record(
-            self
-    ) -> DevicePropertyItem or ChannelPropertyItem:
+    def record(self) -> DevicePropertyItem or ChannelPropertyItem:
         return self.__record
 
     # -----------------------------------------------------------------------------
 
     @property
-    def actual_value(
-            self
-    ) -> str or int or float or bool:
+    def actual_value(self) -> str or int or float or bool:
         return self.__actual_value
 
     # -----------------------------------------------------------------------------
 
     @property
-    def previous_value(
-            self
-    ) -> str or int or float or bool:
+    def previous_value(self) -> str or int or float or bool:
         return self.__previous_value

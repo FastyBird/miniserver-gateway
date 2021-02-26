@@ -21,6 +21,7 @@ from abc import ABC, abstractmethod
 from queue import Queue, Full as QueueFull
 from threading import Thread
 from typing import Dict, List, Set
+
 # App libs
 from miniserver_gateway.connectors.events import ConnectorPropertyValueEvent
 from miniserver_gateway.constants import LOG_LEVEL
@@ -28,7 +29,10 @@ from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
 from miniserver_gateway.events.dispatcher import app_dispatcher
 from miniserver_gateway.exchanges.events import ExchangePropertyExpectedValueEvent
 from miniserver_gateway.storages.events import StoragePropertyStoredEvent
-from miniserver_gateway.storages.queue import SavePropertyValueQueueItem, SavePropertyExpectedValueQueueItem
+from miniserver_gateway.storages.queue import (
+    SavePropertyValueQueueItem,
+    SavePropertyExpectedValueQueueItem,
+)
 from miniserver_gateway.utils.libraries import LibrariesUtils
 
 logging.basicConfig(level=LOG_LEVEL)
@@ -48,17 +52,12 @@ class StoragesSettings:
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            config: List[Dict[str, str]]
-    ) -> None:
+    def __init__(self, config: List[Dict[str, str]]) -> None:
         self.__storages = config
 
     # -----------------------------------------------------------------------------
 
-    def all(
-            self
-    ) -> List[Dict[str, str]]:
+    def all(self) -> List[Dict[str, str]]:
         return self.__storages
 
 
@@ -84,16 +83,18 @@ class Storages(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            config: List[Dict[str, str]]
-    ) -> None:
+    def __init__(self, config: List[Dict[str, str]]) -> None:
         super().__init__()
 
         self.__settings = StoragesSettings(config)
 
-        app_dispatcher.add_listener(ConnectorPropertyValueEvent.EVENT_NAME, self.__store_value_event)
-        app_dispatcher.add_listener(ExchangePropertyExpectedValueEvent.EVENT_NAME, self.__store_expected_value_event)
+        app_dispatcher.add_listener(
+            ConnectorPropertyValueEvent.EVENT_NAME, self.__store_value_event
+        )
+        app_dispatcher.add_listener(
+            ExchangePropertyExpectedValueEvent.EVENT_NAME,
+            self.__store_expected_value_event,
+        )
 
         # Queue for consuming incoming data from connectors
         self.__queue = Queue(maxsize=1000)
@@ -112,9 +113,7 @@ class Storages(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def run(
-            self
-    ) -> None:
+    def run(self) -> None:
         self.__stopped = False
 
         # All records have to be processed before thread is closed
@@ -135,9 +134,7 @@ class Storages(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def close(
-            self
-    ) -> None:
+    def close(self) -> None:
         """Stop storage main thread"""
 
         for storage in self.__storages:
@@ -167,66 +164,71 @@ class Storages(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def __store_value_event(
-            self,
-            event: ConnectorPropertyValueEvent
-    ) -> None:
+    def __store_value_event(self, event: ConnectorPropertyValueEvent) -> None:
         try:
-            if isinstance(event.record, DevicePropertyItem) or isinstance(event.record, ChannelPropertyItem):
-                self.__queue.put(SavePropertyValueQueueItem(
-                    event.record,
-                    event.actual_value
-                ))
+            if isinstance(event.record, DevicePropertyItem) or isinstance(
+                event.record, ChannelPropertyItem
+            ):
+                self.__queue.put(
+                    SavePropertyValueQueueItem(event.record, event.actual_value)
+                )
 
             else:
                 log.warning("Received unknown connectors event")
 
         except QueueFull:
-            log.error("Storage processing queue is full. New messages could not be added")
+            log.error(
+                "Storage processing queue is full. New messages could not be added"
+            )
 
     # -----------------------------------------------------------------------------
 
     def __store_expected_value_event(
-            self,
-            event: ExchangePropertyExpectedValueEvent
+        self, event: ExchangePropertyExpectedValueEvent
     ) -> None:
         try:
             if isinstance(event.item, DevicePropertyItem):
-                self.__queue.put(SavePropertyExpectedValueQueueItem(
-                    event.item,
-                    event.expected,
-                ))
+                self.__queue.put(
+                    SavePropertyExpectedValueQueueItem(
+                        event.item,
+                        event.expected,
+                    )
+                )
 
             elif isinstance(event.item, ChannelPropertyItem):
-                self.__queue.put(SavePropertyExpectedValueQueueItem(
-                    event.item,
-                    event.expected,
-                ))
+                self.__queue.put(
+                    SavePropertyExpectedValueQueueItem(
+                        event.item,
+                        event.expected,
+                    )
+                )
 
             else:
                 log.warning("Received unknown exchanges event")
 
         except QueueFull:
-            log.error("Storage processing queue is full. New messages could not be added")
+            log.error(
+                "Storage processing queue is full. New messages could not be added"
+            )
 
     # -----------------------------------------------------------------------------
 
     def __process_property_value_record(
-            self,
-            record: SavePropertyValueQueueItem
+        self, record: SavePropertyValueQueueItem
     ) -> None:
         if self.__primary_storage is None:
             return
 
-        if (
-                not isinstance(record.item, DevicePropertyItem)
-                and not isinstance(record.item, ChannelPropertyItem)
+        if not isinstance(record.item, DevicePropertyItem) and not isinstance(
+            record.item, ChannelPropertyItem
         ):
             # Unknown record item
             return
 
         if self.__primary_storage.write_property_value(record.item, record.value):
-            stored_data: StorageItem = self.__primary_storage.read_property_data(record.item)
+            stored_data: StorageItem = self.__primary_storage.read_property_data(
+                record.item
+            )
 
             app_dispatcher.dispatch(
                 StoragePropertyStoredEvent.EVENT_NAME,
@@ -234,15 +236,14 @@ class Storages(Thread):
                     record.item,
                     stored_data.value,
                     stored_data.expected,
-                    stored_data.expected
-                )
+                    stored_data.expected,
+                ),
             )
 
     # -----------------------------------------------------------------------------
 
     def __process_property_expected_value_record(
-            self,
-            record: SavePropertyExpectedValueQueueItem
+        self, record: SavePropertyExpectedValueQueueItem
     ) -> None:
         if self.__primary_storage is None:
             return
@@ -256,8 +257,12 @@ class Storages(Thread):
         else:
             return
 
-        if self.__primary_storage.write_property_expected(property_item, record.expected_value):
-            stored_data: StorageItem = self.__primary_storage.read_property_data(property_item)
+        if self.__primary_storage.write_property_expected(
+            property_item, record.expected_value
+        ):
+            stored_data: StorageItem = self.__primary_storage.read_property_data(
+                property_item
+            )
 
             app_dispatcher.dispatch(
                 StoragePropertyStoredEvent.EVENT_NAME,
@@ -265,15 +270,13 @@ class Storages(Thread):
                     property_item,
                     stored_data.value,
                     stored_data.expected,
-                    stored_data.expected
-                )
+                    stored_data.expected,
+                ),
             )
 
     # -----------------------------------------------------------------------------
 
-    def __load(
-            self
-    ) -> None:
+    def __load(self) -> None:
         # Reset storages configuration
         self.__storages = set()
 
@@ -282,7 +285,11 @@ class Storages(Thread):
             storage_classname = storage_settings.get("class")
 
             if storage_classname is None:
-                log.error("Classname for configured storage: {} is not configured".format(storage_settings.get("type")))
+                log.error(
+                    "Classname for configured storage: {} is not configured".format(
+                        storage_settings.get("type")
+                    )
+                )
                 continue
 
             try:
@@ -291,9 +298,7 @@ class Storages(Thread):
                     storage_classname
                 )
 
-                storage_module: StorageInterface = storage_class(
-                    storage_settings
-                )
+                storage_module: StorageInterface = storage_class(storage_settings)
 
                 if storage_settings.get("primary", False) is True:
                     self.__primary_storage = storage_module
@@ -321,10 +326,10 @@ class StorageItem:
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            value: bool or int or float or str or None,
-            expected: bool or int or float or str or None,
-            pending: bool
+        self,
+        value: bool or int or float or str or None,
+        expected: bool or int or float or str or None,
+        pending: bool,
     ) -> None:
         self.__value = value
         self.__expected = expected
@@ -333,25 +338,19 @@ class StorageItem:
     # -----------------------------------------------------------------------------
 
     @property
-    def value(
-            self
-    ) -> bool or int or float or str or None:
+    def value(self) -> bool or int or float or str or None:
         return self.__value
 
     # -----------------------------------------------------------------------------
 
     @property
-    def expected(
-            self
-    ) -> bool or int or float or str or None:
+    def expected(self) -> bool or int or float or str or None:
         return self.__expected
 
     # -----------------------------------------------------------------------------
 
     @property
-    def is_pending(
-            self
-    ) -> bool:
+    def is_pending(self) -> bool:
         return self.__pending
 
 
@@ -373,26 +372,22 @@ class StorageInterface(ABC):
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def close(
-            self
-    ) -> None:
+    def close(self) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def clear_cache(
-            self
-    ) -> None:
+    def clear_cache(self) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
     def write_property_value(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem,
-            value_to_write: int or float or str or bool or None
+        self,
+        item: DevicePropertyItem or ChannelPropertyItem,
+        value_to_write: int or float or str or bool or None,
     ) -> bool:
         """Write value to storage and return TRUE if value is updated otherwise FALSE"""
         pass
@@ -401,9 +396,9 @@ class StorageInterface(ABC):
 
     @abstractmethod
     def write_property_expected(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem,
-            expected_value_to_write: int or float or str or bool or None
+        self,
+        item: DevicePropertyItem or ChannelPropertyItem,
+        expected_value_to_write: int or float or str or bool or None,
     ) -> bool:
         """Write expected value to storage and return TRUE if expected value is updated otherwise FALSE"""
         pass
@@ -412,8 +407,7 @@ class StorageInterface(ABC):
 
     @abstractmethod
     def read_property_value(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem
+        self, item: DevicePropertyItem or ChannelPropertyItem
     ) -> int or float or str or bool or None:
         pass
 
@@ -421,8 +415,7 @@ class StorageInterface(ABC):
 
     @abstractmethod
     def read_property_expected(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem
+        self, item: DevicePropertyItem or ChannelPropertyItem
     ) -> int or float or str or bool or None:
         pass
 
@@ -430,7 +423,6 @@ class StorageInterface(ABC):
 
     @abstractmethod
     def read_property_data(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem
+        self, item: DevicePropertyItem or ChannelPropertyItem
     ) -> StorageItem or None:
         pass

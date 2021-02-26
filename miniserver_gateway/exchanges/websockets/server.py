@@ -20,6 +20,7 @@ import ssl
 from select import select
 from threading import Thread
 from typing import Dict, List
+
 # App libs
 from miniserver_gateway.exchanges.websockets.client import WampClient
 from miniserver_gateway.exchanges.websockets.types import OPCodes
@@ -43,13 +44,13 @@ class WebsocketsServer(Thread):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            host: str = "",
-            port: int = 9000,
-            cert_file: str or None = None,
-            key_file: str or None = None,
-            ssl_version: int = ssl.PROTOCOL_TLSv1,
-            select_interval: float = 0.1
+        self,
+        host: str = "",
+        port: int = 9000,
+        cert_file: str or None = None,
+        key_file: str or None = None,
+        ssl_version: int = ssl.PROTOCOL_TLSv1,
+        select_interval: float = 0.1,
     ) -> None:
         Thread.__init__(self)
 
@@ -59,15 +60,12 @@ class WebsocketsServer(Thread):
         fam = socket.AF_INET6 if host is None else 0
 
         host_info = socket.getaddrinfo(
-            host,
-            port,
-            fam,
-            socket.SOCK_STREAM,
-            socket.IPPROTO_TCP,
-            socket.AI_PASSIVE
+            host, port, fam, socket.SOCK_STREAM, socket.IPPROTO_TCP, socket.AI_PASSIVE
         )
 
-        self.__server_socket = socket.socket(host_info[0][0], host_info[0][1], host_info[0][2])
+        self.__server_socket = socket.socket(
+            host_info[0][0], host_info[0][1], host_info[0][2]
+        )
         self.__server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.__server_socket.bind(host_info[0][4])
         self.__server_socket.listen(self.__request_queue_size)
@@ -90,9 +88,7 @@ class WebsocketsServer(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def run(
-            self
-    ) -> None:
+    def run(self) -> None:
         self.__stopped = False
 
         while not self.__stopped:
@@ -100,9 +96,7 @@ class WebsocketsServer(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def close(
-            self
-    ) -> None:
+    def close(self) -> None:
         self.__stopped = True
 
         self.__server_socket.close()
@@ -114,9 +108,7 @@ class WebsocketsServer(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def __handle_request(
-            self
-    ) -> None:
+    def __handle_request(self) -> None:
         writers = []
 
         for fileno in self.__listeners:
@@ -130,18 +122,11 @@ class WebsocketsServer(Thread):
 
         if self.__select_interval:
             r_list, w_list, x_list = select(
-                self.__listeners,
-                writers,
-                self.__listeners,
-                self.__select_interval
+                self.__listeners, writers, self.__listeners, self.__select_interval
             )
 
         else:
-            r_list, w_list, x_list = select(
-                self.__listeners,
-                writers,
-                self.__listeners
-            )
+            r_list, w_list, x_list = select(self.__listeners, writers, self.__listeners)
 
         for ready in w_list:
             client = self.__connections[ready]
@@ -220,10 +205,7 @@ class WebsocketsServer(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def __decorate_socket(
-            self,
-            sock: socket.socket
-    ) -> socket.socket:
+    def __decorate_socket(self, sock: socket.socket) -> socket.socket:
         if self.__using_ssl:
             return self.__secured_context.wrap_socket(sock, server_side=True)
 
@@ -232,9 +214,7 @@ class WebsocketsServer(Thread):
     # -----------------------------------------------------------------------------
 
     @staticmethod
-    def __handle_close(
-            client: WampClient
-    ):
+    def __handle_close(client: WampClient):
         client.sock.close()
 
         # only call handle_close when we have a successful websocket connection

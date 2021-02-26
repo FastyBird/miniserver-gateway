@@ -19,6 +19,7 @@ import time
 import uuid
 from abc import ABC
 from typing import Dict
+
 # App libs
 from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
 from miniserver_gateway.db.utils import EntityKeyHash
@@ -47,12 +48,12 @@ class CreateOrUpdateDeviceQueueItem(QueueItem):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            connector_id: uuid.UUID,
-            device_id: uuid.UUID,
-            identifier: str,
-            state: DeviceStates,
-            **kwargs
+        self,
+        connector_id: uuid.UUID,
+        device_id: uuid.UUID,
+        identifier: str,
+        state: DeviceStates,
+        **kwargs
     ) -> None:
         self.__connector_id = connector_id
         self.__device_id = device_id
@@ -64,41 +65,31 @@ class CreateOrUpdateDeviceQueueItem(QueueItem):
     # -----------------------------------------------------------------------------
 
     @property
-    def connector_id(
-            self
-    ) -> uuid.UUID:
+    def connector_id(self) -> uuid.UUID:
         return self.__connector_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def device_id(
-            self
-    ) -> uuid.UUID:
+    def device_id(self) -> uuid.UUID:
         return self.__device_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def identifier(
-            self
-    ) -> str:
+    def identifier(self) -> str:
         return self.__identifier
 
     # -----------------------------------------------------------------------------
 
     @property
-    def state(
-            self
-    ) -> DeviceStates:
+    def state(self) -> DeviceStates:
         return self.__state
 
     # -----------------------------------------------------------------------------
 
     @property
-    def attributes(
-            self
-    ) -> dict:
+    def attributes(self) -> dict:
         return {**self.__attributes, **{"state": self.__state}}
 
 
@@ -119,11 +110,11 @@ class CreateOrUpdatePropertyQueueItem(QueueItem):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            device_id: uuid.UUID,
-            property_id: uuid.UUID,
-            property_identifier: str,
-            **kwargs
+        self,
+        device_id: uuid.UUID,
+        property_id: uuid.UUID,
+        property_identifier: str,
+        **kwargs
     ) -> None:
         self.__device_id = device_id
         self.__property_id = property_id
@@ -134,25 +125,19 @@ class CreateOrUpdatePropertyQueueItem(QueueItem):
     # -----------------------------------------------------------------------------
 
     @property
-    def device_id(
-            self
-    ) -> uuid.UUID:
+    def device_id(self) -> uuid.UUID:
         return self.__device_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def property_id(
-            self
-    ) -> uuid.UUID:
+    def property_id(self) -> uuid.UUID:
         return self.__property_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def key(
-            self
-    ) -> str:
+    def key(self) -> str:
         if "key" in self.__attributes.keys():
             return self.__attributes.get("key")
 
@@ -161,17 +146,13 @@ class CreateOrUpdatePropertyQueueItem(QueueItem):
     # -----------------------------------------------------------------------------
 
     @property
-    def property_identifier(
-            self
-    ) -> str:
+    def property_identifier(self) -> str:
         return self.__property_identifier
 
     # -----------------------------------------------------------------------------
 
     @property
-    def attributes(
-            self
-    ) -> dict:
+    def attributes(self) -> dict:
         return self.__attributes
 
 
@@ -202,13 +183,13 @@ class CreateOrUpdateChannelPropertyQueueItem(CreateOrUpdatePropertyQueueItem):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            device_id: uuid.UUID,
-            channel_id: uuid.UUID,
-            channel_identifier: str,
-            property_id: uuid.UUID,
-            property_identifier: str,
-            **kwargs
+        self,
+        device_id: uuid.UUID,
+        channel_id: uuid.UUID,
+        channel_identifier: str,
+        property_id: uuid.UUID,
+        property_identifier: str,
+        **kwargs
     ) -> None:
         super().__init__(device_id, property_id, property_identifier, **kwargs)
 
@@ -218,17 +199,13 @@ class CreateOrUpdateChannelPropertyQueueItem(CreateOrUpdatePropertyQueueItem):
     # -----------------------------------------------------------------------------
 
     @property
-    def channel_id(
-            self
-    ) -> uuid.UUID:
+    def channel_id(self) -> uuid.UUID:
         return self.__channel_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def channel_identifier(
-            self
-    ) -> str:
+    def channel_identifier(self) -> str:
         return self.__channel_identifier
 
 
@@ -245,18 +222,13 @@ class DeletePropertyQueueItem(QueueItem):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            property_id: uuid.UUID
-    ) -> None:
+    def __init__(self, property_id: uuid.UUID) -> None:
         self.__property_id = property_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def property_id(
-            self
-    ) -> uuid.UUID:
+    def property_id(self) -> uuid.UUID:
         return self.__property_id
 
 
@@ -299,9 +271,9 @@ class UpdatePropertyExpectedQueueItem(QueueItem):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem,
-            expected: bool or int or float or str or None
+        self,
+        item: DevicePropertyItem or ChannelPropertyItem,
+        expected: bool or int or float or str or None,
     ) -> None:
         self.__item = item
         self.__expected = expected
@@ -309,17 +281,13 @@ class UpdatePropertyExpectedQueueItem(QueueItem):
     # -----------------------------------------------------------------------------
 
     @property
-    def item(
-            self
-    ) -> DevicePropertyItem or ChannelPropertyItem:
+    def item(self) -> DevicePropertyItem or ChannelPropertyItem:
         return self.__item
 
     # -----------------------------------------------------------------------------
 
     @property
-    def expected_value(
-            self
-    ) -> bool or int or float or str or None:
+    def expected_value(self) -> bool or int or float or str or None:
         return self.__expected
 
 
@@ -341,12 +309,12 @@ class CreateOrUpdateConfigurationQueueItem(QueueItem):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            device_id: uuid.UUID,
-            configuration_id: uuid.UUID,
-            configuration_identifier: str,
-            data_type: DataType,
-            **kwargs
+        self,
+        device_id: uuid.UUID,
+        configuration_id: uuid.UUID,
+        configuration_identifier: str,
+        data_type: DataType,
+        **kwargs
     ) -> None:
         self.__device_id = device_id
         self.__configuration_id = configuration_id
@@ -358,41 +326,31 @@ class CreateOrUpdateConfigurationQueueItem(QueueItem):
     # -----------------------------------------------------------------------------
 
     @property
-    def device_id(
-            self
-    ) -> uuid.UUID:
+    def device_id(self) -> uuid.UUID:
         return self.__device_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def configuration_id(
-            self
-    ) -> uuid.UUID:
+    def configuration_id(self) -> uuid.UUID:
         return self.__configuration_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def configuration_identifier(
-            self
-    ) -> str:
+    def configuration_identifier(self) -> str:
         return self.__configuration_identifier
 
     # -----------------------------------------------------------------------------
 
     @property
-    def data_type(
-            self
-    ) -> DataType:
+    def data_type(self) -> DataType:
         return self.__data_type
 
     # -----------------------------------------------------------------------------
 
     @property
-    def attributes(
-            self
-    ) -> dict:
+    def attributes(self) -> dict:
         return self.__attributes
 
 
@@ -422,24 +380,24 @@ class CreateOrUpdateChannelConfigurationQueueItem(CreateOrUpdateConfigurationQue
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            device_id: uuid.UUID,
-            channel_id: uuid.UUID,
-            configuration_id: uuid.UUID,
-            configuration_identifier: str,
-            data_type: DataType,
-            **kwargs
+        self,
+        device_id: uuid.UUID,
+        channel_id: uuid.UUID,
+        configuration_id: uuid.UUID,
+        configuration_identifier: str,
+        data_type: DataType,
+        **kwargs
     ) -> None:
-        super().__init__(device_id, configuration_id, configuration_identifier, data_type, **kwargs)
+        super().__init__(
+            device_id, configuration_id, configuration_identifier, data_type, **kwargs
+        )
 
         self.__channel_id = channel_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def channel_id(
-            self
-    ) -> uuid.UUID:
+    def channel_id(self) -> uuid.UUID:
         return self.__channel_id
 
 
@@ -456,18 +414,13 @@ class DeleteConfigurationQueueItem(QueueItem):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            configuration_id: uuid.UUID
-    ) -> None:
+    def __init__(self, configuration_id: uuid.UUID) -> None:
         self.__configuration_id = configuration_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def configuration_id(
-            self
-    ) -> uuid.UUID:
+    def configuration_id(self) -> uuid.UUID:
         return self.__configuration_id
 
 

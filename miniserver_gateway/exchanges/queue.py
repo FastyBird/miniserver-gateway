@@ -16,6 +16,7 @@
 
 # App dependencies
 from abc import ABC
+
 # App libs
 from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
 from miniserver_gateway.exchanges.types import RoutingKeys
@@ -38,11 +39,11 @@ class PublishPropertyValueQueueItem(ABC):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem,
-            value: bool or int or float or str or None,
-            expected_value: bool or int or float or str or None,
-            is_pending: bool
+        self,
+        item: DevicePropertyItem or ChannelPropertyItem,
+        value: bool or int or float or str or None,
+        expected_value: bool or int or float or str or None,
+        is_pending: bool,
     ) -> None:
         self.__item = item
 
@@ -53,33 +54,25 @@ class PublishPropertyValueQueueItem(ABC):
     # -----------------------------------------------------------------------------
 
     @property
-    def item(
-            self
-    ) -> DevicePropertyItem or ChannelPropertyItem:
+    def item(self) -> DevicePropertyItem or ChannelPropertyItem:
         return self.__item
 
     # -----------------------------------------------------------------------------
 
     @property
-    def value(
-            self
-    ) -> bool or int or float or str or None:
+    def value(self) -> bool or int or float or str or None:
         return self.__value
 
     # -----------------------------------------------------------------------------
 
     @property
-    def expected_value(
-            self
-    ) -> bool or int or float or str or None:
+    def expected_value(self) -> bool or int or float or str or None:
         return self.__expected_value
 
     # -----------------------------------------------------------------------------
 
     @property
-    def is_pending(
-            self
-    ) -> bool or int or float or str or None:
+    def is_pending(self) -> bool or int or float or str or None:
         return self.__is_pending
 
 
@@ -95,26 +88,18 @@ class PublishEntityQueueItem:
     __routing_key: RoutingKeys
     __content: dict
 
-    def __init__(
-            self,
-            routing_key: RoutingKeys,
-            content: dict
-    ) -> None:
+    def __init__(self, routing_key: RoutingKeys, content: dict) -> None:
         self.__routing_key = routing_key
         self.__content = content
 
     # -----------------------------------------------------------------------------
 
     @property
-    def routing_key(
-            self
-    ) -> RoutingKeys:
+    def routing_key(self) -> RoutingKeys:
         return self.__routing_key
 
     # -----------------------------------------------------------------------------
 
     @property
-    def content(
-            self
-    ) -> dict:
+    def content(self) -> dict:
         return self.__content

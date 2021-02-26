@@ -30,10 +30,15 @@ from collections import deque
 from io import BytesIO
 from http.client import parse_headers, HTTPMessage
 from typing import Dict, List, Union, Tuple
+
 # App libs
 from miniserver_gateway.constants import WS_SERVER_TOPIC
 from miniserver_gateway.events.dispatcher import app_dispatcher
-from miniserver_gateway.exchanges.websockets.events import SubscribeEvent, UnsubscribeEvent, ReceiveProcedureRequestEvent
+from miniserver_gateway.exchanges.websockets.events import (
+    SubscribeEvent,
+    UnsubscribeEvent,
+    ReceiveProcedureRequestEvent,
+)
 from miniserver_gateway.exchanges.websockets.types import OPCodes, WampCodes
 from miniserver_gateway.exchanges.websockets.client_interface import WampClientInterface
 
@@ -55,7 +60,9 @@ class WampClient(WampClientInterface):
     __frag_start: bool = False
     __frag_type: int = OPCodes(OPCodes.BINARY).value
     __frag_buffer: bytearray or None = None
-    __frag_decoder: IncrementalDecoder = codecs.getincrementaldecoder("utf-8")(errors="strict")
+    __frag_decoder: IncrementalDecoder = codecs.getincrementaldecoder("utf-8")(
+        errors="strict"
+    )
 
     __is_closed: bool = False
 
@@ -76,37 +83,47 @@ class WampClient(WampClientInterface):
     __MAX_PAYLOAD: int = 33554432
     __HEADER_SIZE: int = 2048
 
-    __VALID_STATUS_CODES: List[int] = [1000, 1001, 1002, 1003, 1007, 1008, 1009, 1010, 1011, 3000, 3999, 4000, 4999]
+    __VALID_STATUS_CODES: List[int] = [
+        1000,
+        1001,
+        1002,
+        1003,
+        1007,
+        1008,
+        1009,
+        1010,
+        1011,
+        3000,
+        3999,
+        4000,
+        4999,
+    ]
 
     __GUID_STR: str = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
     # -----------------------------------------------------------------------------
 
     __HANDSHAKE_STR = (
-        'HTTP/1.1 101 Switching Protocols\r\n'
-        'Upgrade: WebSocket\r\n'
-        'Connection: Upgrade\r\n'
-        'Sec-WebSocket-Accept: %(acceptstr)s\r\n\r\n'
+        "HTTP/1.1 101 Switching Protocols\r\n"
+        "Upgrade: WebSocket\r\n"
+        "Connection: Upgrade\r\n"
+        "Sec-WebSocket-Accept: %(acceptstr)s\r\n\r\n"
     )
 
     # -----------------------------------------------------------------------------
 
     __FAILED_HANDSHAKE_STR = (
-        'HTTP/1.1 426 Upgrade Required\r\n'
-        'Upgrade: WebSocket\r\n'
-        'Connection: Upgrade\r\n'
-        'Sec-WebSocket-Version: 13\r\n'
-        'Content-Type: text/plain\r\n\r\n'
-        'This service requires use of the WebSocket protocol\r\n'
+        "HTTP/1.1 426 Upgrade Required\r\n"
+        "Upgrade: WebSocket\r\n"
+        "Connection: Upgrade\r\n"
+        "Sec-WebSocket-Version: 13\r\n"
+        "Content-Type: text/plain\r\n\r\n"
+        "This service requires use of the WebSocket protocol\r\n"
     )
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            sock: socket.socket,
-            address: Tuple[str, int, int, int]
-    ) -> None:
+    def __init__(self, sock: socket.socket, address: Tuple[str, int, int, int]) -> None:
         self.sock: socket.socket = sock
         self.address: Tuple[str, int, int, int] = address
 
@@ -115,33 +132,28 @@ class WampClient(WampClientInterface):
         self.__request_header_buffer = bytearray()
 
         self.__wamp_session = (
-                str(random.randint(0, sys.maxsize)) + hex(int(time.time()))[2:10]
-                + hex(int(time.time() * 1000000) % 0x100000)[2:7]
+            str(random.randint(0, sys.maxsize))
+            + hex(int(time.time()))[2:10]
+            + hex(int(time.time() * 1000000) % 0x100000)[2:7]
         ).replace(".", "")
 
     # -----------------------------------------------------------------------------
 
-    def get_id(
-            self
-    ) -> str:
+    def get_id(self) -> str:
         return self.__wamp_session
 
     # -----------------------------------------------------------------------------
 
-    def handshake_finished(
-            self
-    ) -> bool:
+    def handshake_finished(self) -> bool:
         return self.__handshake_finished
 
     # -----------------------------------------------------------------------------
 
-    def handle_message(
-            self
-    ) -> None:
+    def handle_message(self) -> None:
         """
-          Called when websocket frame is received
-          To access the frame data call self.__received_data
-          The self.__received_data is a bytearray object
+        Called when websocket frame is received
+        To access the frame data call self.__received_data
+        The self.__received_data is a bytearray object
         """
 
         try:
@@ -150,11 +162,15 @@ class WampClient(WampClientInterface):
             if int(parsed_data[0]) == WampCodes(WampCodes.MSG_PREFIX).value:
                 self.__prefixes[str(parsed_data[1])] = str(parsed_data[2])
 
-                self.send_message(json.dumps([
-                    WampCodes(WampCodes.MSG_PREFIX).value,
-                    parsed_data[1],
-                    str(parsed_data[2]),
-                ]))
+                self.send_message(
+                    json.dumps(
+                        [
+                            WampCodes(WampCodes.MSG_PREFIX).value,
+                            parsed_data[1],
+                            str(parsed_data[2]),
+                        ]
+                    )
+                )
 
             # RPC from client
             elif int(parsed_data[0]) == WampCodes(WampCodes.MSG_CALL).value:
@@ -171,26 +187,29 @@ class WampClient(WampClientInterface):
 
                     app_dispatcher.dispatch(
                         ReceiveProcedureRequestEvent.EVENT_NAME,
-                        ReceiveProcedureRequestEvent(self, rpc_id, data)
+                        ReceiveProcedureRequestEvent(self, rpc_id, data),
                     )
 
                 else:
-                    self.send_message(json.dumps([
-                        WampCodes(WampCodes.MSG_CALL_ERROR).value,
-                        rpc_id,
-                        topic_id,
-                        "Invalid topic provided",
-                        {
-                            "params": parsed_data,
-                        },
-                    ]))
+                    self.send_message(
+                        json.dumps(
+                            [
+                                WampCodes(WampCodes.MSG_CALL_ERROR).value,
+                                rpc_id,
+                                topic_id,
+                                "Invalid topic provided",
+                                {
+                                    "params": parsed_data,
+                                },
+                            ]
+                        )
+                    )
 
             # Subscribe client to defined topic
             elif int(parsed_data[0]) == WampCodes(WampCodes.MSG_SUBSCRIBE).value:
                 if str(parsed_data[1]) == WS_SERVER_TOPIC:
                     app_dispatcher.dispatch(
-                        SubscribeEvent.EVENT_NAME,
-                        SubscribeEvent(self)
+                        SubscribeEvent.EVENT_NAME, SubscribeEvent(self)
                     )
 
                 else:
@@ -201,8 +220,7 @@ class WampClient(WampClientInterface):
             elif int(parsed_data[0]) == WampCodes(WampCodes.MSG_UNSUBSCRIBE).value:
                 if str(parsed_data[1]) == WS_SERVER_TOPIC:
                     app_dispatcher.dispatch(
-                        UnsubscribeEvent.EVENT_NAME,
-                        UnsubscribeEvent(self)
+                        UnsubscribeEvent.EVENT_NAME, UnsubscribeEvent(self)
                     )
 
                 else:
@@ -220,40 +238,35 @@ class WampClient(WampClientInterface):
 
     # -----------------------------------------------------------------------------
 
-    def handle_open(
-            self
-    ) -> None:
+    def handle_open(self) -> None:
         """
-          Called when a websocket client connects to the server.
+        Called when a websocket client connects to the server.
         """
 
-        self.send_message(json.dumps([
-            WampCodes(WampCodes.MSG_WELCOME).value,
-            self.__wamp_session,
-            1,
-            "FB/WebSockets/1.0.0"
-        ]))
+        self.send_message(
+            json.dumps(
+                [
+                    WampCodes(WampCodes.MSG_WELCOME).value,
+                    self.__wamp_session,
+                    1,
+                    "FB/WebSockets/1.0.0",
+                ]
+            )
+        )
 
     # -----------------------------------------------------------------------------
 
-    def handle_close(
-            self
-    ) -> None:
+    def handle_close(self) -> None:
         """
-          Called when a websocket server gets a Close frame from a client.
+        Called when a websocket server gets a Close frame from a client.
         """
 
-        app_dispatcher.dispatch(
-            UnsubscribeEvent.EVENT_NAME,
-            UnsubscribeEvent(self)
-        )
+        app_dispatcher.dispatch(UnsubscribeEvent.EVENT_NAME, UnsubscribeEvent(self))
         pass
 
     # -----------------------------------------------------------------------------
 
-    def receive_data(
-            self
-    ) -> None:
+    def receive_data(self) -> None:
         # Do the HTTP header and handshake
         if self.__handshake_finished is False:
             data = self.sock.recv(self.__HEADER_SIZE)
@@ -268,7 +281,7 @@ class WampClient(WampClientInterface):
                 raise Exception("Header exceeded allowable size")
 
             # indicates end of HTTP header
-            if b'\r\n\r\n' in self.__request_header_buffer:
+            if b"\r\n\r\n" in self.__request_header_buffer:
                 # handshake rfc 6455
                 try:
                     header_buffer = BytesIO(self.__request_header_buffer)
@@ -281,7 +294,9 @@ class WampClient(WampClientInterface):
                     k_s = base64.b64encode(hashlib.sha1(k).digest()).decode("ascii")
                     hs = self.__HANDSHAKE_STR % {"acceptstr": k_s}
 
-                    self.__send_queue.append((OPCodes(OPCodes.BINARY).value, hs.encode("ascii")))
+                    self.__send_queue.append(
+                        (OPCodes(OPCodes.BINARY).value, hs.encode("ascii"))
+                    )
 
                     self.__handshake_finished = True
 
@@ -306,17 +321,13 @@ class WampClient(WampClientInterface):
 
     # -----------------------------------------------------------------------------
 
-    def send_close(
-            self,
-            status: int = 1000,
-            reason: str = u''
-    ) -> None:
+    def send_close(self, status: int = 1000, reason: str = u"") -> None:
         """
-           Send Close frame to the client. The underlying socket is only closed
-           when the client acknowledges the Close frame.
-           status is the closing identifier.
-           reason is the reason for the close.
-         """
+        Send Close frame to the client. The underlying socket is only closed
+        when the client acknowledges the Close frame.
+        status is the closing identifier.
+        reason is the reason for the close.
+        """
         try:
             if self.__is_closed is False:
                 close_msg = bytearray()
@@ -335,14 +346,11 @@ class WampClient(WampClientInterface):
 
     # -----------------------------------------------------------------------------
 
-    def send_message(
-            self,
-            data: bytearray or str
-    ) -> None:
+    def send_message(self, data: bytearray or str) -> None:
         """
-          Send websocket data frame to the client.
-          If data is a unicode object then the frame is sent as Text.
-          If the data is a bytearray object then the frame is sent as Binary.
+        Send websocket data frame to the client.
+        If data is a unicode object then the frame is sent as Text.
+        If the data is a bytearray object then the frame is sent as Binary.
         """
         opcode = OPCodes(OPCodes.BINARY).value
 
@@ -354,9 +362,7 @@ class WampClient(WampClientInterface):
     # -----------------------------------------------------------------------------
 
     def send_buffer(
-            self,
-            buff: bytes,
-            send_all: bool = False
+        self, buff: bytes, send_all: bool = False
     ) -> Union[int, bytes] or None:
         size = len(buff)
         to_send = size
@@ -387,19 +393,12 @@ class WampClient(WampClientInterface):
 
     # -----------------------------------------------------------------------------
 
-    def get_send_queue(
-            self
-    ) -> deque:
+    def get_send_queue(self) -> deque:
         return self.__send_queue
 
     # -----------------------------------------------------------------------------
 
-    def __send_message(
-            self,
-            fin: bool,
-            opcode: int,
-            data: bytearray or str
-    ) -> None:
+    def __send_message(self, fin: bool, opcode: int, data: bytearray or str) -> None:
         payload = bytearray()
 
         b1 = 0
@@ -437,10 +436,7 @@ class WampClient(WampClientInterface):
 
     # -----------------------------------------------------------------------------
 
-    def __parse_message(
-            self,
-            byte
-    ) -> None:
+    def __parse_message(self, byte) -> None:
         # read in the header
         if self.__state == self.__HEADER_B1:
             self.__fin = byte & 0x80
@@ -606,9 +602,7 @@ class WampClient(WampClientInterface):
 
     # -----------------------------------------------------------------------------
 
-    def __handle_packet(
-            self
-    ) -> None:
+    def __handle_packet(self) -> None:
         if self.__opcode == OPCodes(OPCodes.CLOSE).value:
             pass
 
@@ -621,7 +615,10 @@ class WampClient(WampClientInterface):
         elif self.__opcode == OPCodes(OPCodes.BINARY).value:
             pass
 
-        elif self.__opcode == OPCodes(OPCodes.PONG).value or self.__opcode == OPCodes(OPCodes.PING).value:
+        elif (
+            self.__opcode == OPCodes(OPCodes.PONG).value
+            or self.__opcode == OPCodes(OPCodes.PING).value
+        ):
             if len(self.__received_data) > 125:
                 raise Exception("Control frame length can not be > 125")
 
@@ -631,7 +628,7 @@ class WampClient(WampClientInterface):
 
         if self.__opcode == OPCodes(OPCodes.CLOSE).value:
             status = 1000
-            reason = u''
+            reason = u""
             length = len(self.__received_data)
 
             if length == 0:
@@ -658,7 +655,10 @@ class WampClient(WampClientInterface):
 
         elif self.__fin == 0:
             if self.__opcode != OPCodes(OPCodes.STREAM).value:
-                if self.__opcode == OPCodes(OPCodes.PING).value or self.__opcode == OPCodes(OPCodes.PONG).value:
+                if (
+                    self.__opcode == OPCodes(OPCodes.PING).value
+                    or self.__opcode == OPCodes(OPCodes.PONG).value
+                ):
                     raise Exception("Control messages can not be fragmented")
 
                 self.__frag_type = self.__opcode
@@ -668,7 +668,9 @@ class WampClient(WampClientInterface):
                 if self.__frag_type == OPCodes(OPCodes.TEXT).value:
                     self.__frag_buffer = bytearray()
 
-                    utf_str = self.__frag_decoder.decode(self.__received_data, final=False)
+                    utf_str = self.__frag_decoder.decode(
+                        self.__received_data, final=False
+                    )
 
                     if utf_str:
                         self.__frag_buffer.append(utf_str)
@@ -682,7 +684,9 @@ class WampClient(WampClientInterface):
                     raise Exception("Fragmentation protocol error")
 
                 if self.__frag_type == OPCodes(OPCodes.TEXT).value:
-                    utf_str = self.__frag_decoder.decode(self.__received_data, final=False)
+                    utf_str = self.__frag_decoder.decode(
+                        self.__received_data, final=False
+                    )
 
                     if utf_str:
                         self.__frag_buffer.append(utf_str)
@@ -696,12 +700,14 @@ class WampClient(WampClientInterface):
                     raise Exception("Fragmentation protocol error")
 
                 if self.__frag_type == OPCodes(OPCodes.TEXT).value:
-                    utf_str = self.__frag_decoder.decode(self.__received_data, final=True)
+                    utf_str = self.__frag_decoder.decode(
+                        self.__received_data, final=True
+                    )
 
                     self.__frag_buffer.append(utf_str)
 
                     self.__received_data = bytearray()
-                    self.__received_data.extend(u''.join(self.__frag_buffer))
+                    self.__received_data.extend(u"".join(self.__frag_buffer))
 
                 else:
                     self.__frag_buffer.extend(self.__received_data)
@@ -716,7 +722,9 @@ class WampClient(WampClientInterface):
                 self.__frag_buffer = None
 
             elif self.__opcode == OPCodes(OPCodes.PING).value:
-                self.__send_message(False, OPCodes(OPCodes.PONG).value, self.__received_data)
+                self.__send_message(
+                    False, OPCodes(OPCodes.PONG).value, self.__received_data
+                )
 
             elif self.__opcode == OPCodes(OPCodes.PONG).value:
                 pass

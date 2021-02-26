@@ -20,6 +20,7 @@ from time import sleep
 from redis import Redis
 from redis.client import PubSub
 from threading import Thread
+
 # App libs
 from miniserver_gateway.constants import APP_ORIGIN
 from miniserver_gateway.exchanges.exchanges import log, Exchanges, ExchangeInterface
@@ -41,10 +42,7 @@ class RedisExchangeSettings:
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            config: dict
-    ) -> None:
+    def __init__(self, config: dict) -> None:
         self.__host = config.get("host", "127.0.0.1")
         self.__port = int(config.get("port", 6379))
         self.__username = config.get("username", None)
@@ -53,33 +51,25 @@ class RedisExchangeSettings:
     # -----------------------------------------------------------------------------
 
     @property
-    def host(
-            self
-    ) -> str:
+    def host(self) -> str:
         return self.__host
 
     # -----------------------------------------------------------------------------
 
     @property
-    def port(
-            self
-    ) -> int:
+    def port(self) -> int:
         return self.__port
 
     # -----------------------------------------------------------------------------
 
     @property
-    def username(
-            self
-    ) -> str or None:
+    def username(self) -> str or None:
         return self.__username
 
     # -----------------------------------------------------------------------------
 
     @property
-    def password(
-            self
-    ) -> str or None:
+    def password(self) -> str or None:
         return self.__password
 
 
@@ -105,11 +95,7 @@ class RedisExchange(ExchangeInterface, Thread):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            config: dict,
-            exchange: Exchanges
-    ) -> None:
+    def __init__(self, config: dict, exchange: Exchanges) -> None:
         Thread.__init__(self)
         ExchangeInterface.__init__(self, config)
 
@@ -117,7 +103,9 @@ class RedisExchange(ExchangeInterface, Thread):
 
         self.__settings = RedisExchangeSettings(config)
 
-        self.__redis_client = Redis(host=self.__settings.host, port=self.__settings.port)
+        self.__redis_client = Redis(
+            host=self.__settings.host, port=self.__settings.port
+        )
         self.__redis_pub_sub = self.__redis_client.pubsub()
 
         self.__redis_pub_sub.subscribe(self.__CHANNEL_NAME)
@@ -129,9 +117,7 @@ class RedisExchange(ExchangeInterface, Thread):
 
     # -----------------------------------------------------------------------------
 
-    def run(
-            self
-    ) -> None:
+    def run(self) -> None:
         self.__stopped = False
 
         while not self.__stopped:
@@ -141,15 +127,15 @@ class RedisExchange(ExchangeInterface, Thread):
                 received_data = result.get("data", bytes("{}", "utf-8"))
 
                 if isinstance(received_data, bytes):
-                    self.__container.process_received_message(received_data.decode("utf-8"))
+                    self.__container.process_received_message(
+                        received_data.decode("utf-8")
+                    )
 
             sleep(0.001)
 
     # -----------------------------------------------------------------------------
 
-    def close(
-            self
-    ) -> None:
+    def close(self) -> None:
         self.__stopped = True
 
         # Disconnect from server
@@ -157,17 +143,19 @@ class RedisExchange(ExchangeInterface, Thread):
 
     # -----------------------------------------------------------------------------
 
-    def publish(
-            self,
-            routing_key: str,
-            data: dict
-    ) -> None:
+    def publish(self, routing_key: str, data: dict) -> None:
         message: dict = {
             "routing_key": routing_key,
             "origin": APP_ORIGIN,
             "data": data,
         }
 
-        result: int = self.__redis_client.publish(self.__CHANNEL_NAME, json.dumps(message))
+        result: int = self.__redis_client.publish(
+            self.__CHANNEL_NAME, json.dumps(message)
+        )
 
-        log.debug("Successfully published message to: {} consumers with key: {}".format(result, routing_key))
+        log.debug(
+            "Successfully published message to: {} consumers via Redis with key: {}".format(
+                result, routing_key
+            )
+        )

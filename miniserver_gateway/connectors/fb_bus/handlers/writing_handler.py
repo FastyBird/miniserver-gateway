@@ -17,13 +17,20 @@
 # App dependencies
 import time
 from typing import List
+
 # App libs
 from miniserver_gateway.connectors.connectors import log
-from miniserver_gateway.connectors.fb_bus.fb_bus_connector_interface import FbBusConnectorInterface
+from miniserver_gateway.connectors.fb_bus.fb_bus_connector_interface import (
+    FbBusConnectorInterface,
+)
 from miniserver_gateway.connectors.fb_bus.entities.device import DeviceEntity
 from miniserver_gateway.connectors.fb_bus.entities.register import RegisterEntity
 from miniserver_gateway.connectors.fb_bus.handlers.handler import Handler
-from miniserver_gateway.connectors.fb_bus.types.types import Packets, PacketsContents, RegistersTypes
+from miniserver_gateway.connectors.fb_bus.types.types import (
+    Packets,
+    PacketsContents,
+    RegistersTypes,
+)
 from miniserver_gateway.connectors.fb_bus.utilities.helpers import RegistersHelper
 
 
@@ -42,42 +49,26 @@ class WritingHandler(Handler):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            connector: FbBusConnectorInterface
-    ) -> None:
+    def __init__(self, connector: FbBusConnectorInterface) -> None:
         self.__connector = connector
 
     # -----------------------------------------------------------------------------
 
     def receive(
-            self,
-            packet: Packets,
-            sender_address: int,
-            payload: str,
-            length: int
+        self, packet: Packets, sender_address: int, payload: str, length: int
     ) -> None:
         if packet == Packets.FB_PACKET_WRITE_SINGLE_REGISTER:
-            self.__write_single_registers_receiver(
-                sender_address,
-                payload,
-                length
-            )
+            self.__write_single_registers_receiver(sender_address, payload, length)
 
     # -----------------------------------------------------------------------------
 
-    def handle(
-            self,
-            device: DeviceEntity
-    ) -> None:
+    def handle(self, device: DeviceEntity) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     def write_value_to_register(
-            self,
-            register: RegisterEntity,
-            write_value: bool or int
+        self, register: RegisterEntity, write_value: bool or int
     ) -> None:
         device = self.__connector.get_device_by_id(register.get_device_id())
 
@@ -110,8 +101,7 @@ class WritingHandler(Handler):
 
         elif register.get_type() == RegistersTypes.FB_REGISTER_AO:
             transformed: bytearray or None = RegistersHelper.transform_value_to_bytes(
-                register,
-                write_value
+                register, write_value
             )
 
             # Value could not be transformed
@@ -126,7 +116,9 @@ class WritingHandler(Handler):
         else:
             return
 
-        output_content.append(PacketsContents(PacketsContents.FB_CONTENT_TERMINATOR).value)  # Be sure to set the null terminator!!!
+        output_content.append(
+            PacketsContents(PacketsContents.FB_CONTENT_TERMINATOR).value
+        )  # Be sure to set the null terminator!!!
 
         # Increment communication counter...
         device.increment_attempts()
@@ -138,9 +130,7 @@ class WritingHandler(Handler):
         self.__connector.update_device(device)
 
         result: bool = self.__connector.send_packet(
-            device.get_address(),
-            output_content,
-            self.__PACKET_RESPONSE_DELAY
+            device.get_address(), output_content, self.__PACKET_RESPONSE_DELAY
         )
 
         if result is False:
@@ -160,13 +150,12 @@ class WritingHandler(Handler):
     # n+1   => Packet null terminator           => FB_PACKET_TERMINATOR
 
     def __write_single_registers_receiver(
-            self,
-            sender_address: int,
-            payload: str,
-            payload_length: int
+        self, sender_address: int, payload: str, payload_length: int
     ) -> None:
         # Get device info from registry
-        device: DeviceEntity or None = self.__connector.get_device_by_address(sender_address)
+        device: DeviceEntity or None = self.__connector.get_device_by_address(
+            sender_address
+        )
 
         if device is None:
             return
@@ -183,9 +172,7 @@ class WritingHandler(Handler):
         register_address: int = (int(payload[2]) << 8) | int(payload[3])
 
         register: RegisterEntity = self.__connector.get_register_by_address(
-            device,
-            register_type,
-            register_address
+            device, register_type, register_address
         )
 
         if register is not None:
@@ -202,7 +189,9 @@ class WritingHandler(Handler):
                     int(payload[7]),
                 ]
 
-                transformed: int or float or None = RegistersHelper.transform_value_from_bytes(register, write_value)
+                transformed: int or float or None = (
+                    RegistersHelper.transform_value_from_bytes(register, write_value)
+                )
 
                 if transformed is not None:
                     self.__connector.update_register_value(register, transformed)

@@ -18,11 +18,18 @@
 import uuid
 from abc import ABC, abstractmethod
 from typing import List
+
 # App libs
 from miniserver_gateway.connectors.fb_bus.entities.device import DeviceEntity
 from miniserver_gateway.connectors.fb_bus.entities.register import RegisterEntity
-from miniserver_gateway.connectors.fb_bus.entities.setting import DeviceSettingEntity, RegisterSettingEntity
-from miniserver_gateway.connectors.fb_bus.types.types import RegistersTypes, SettingsTypes
+from miniserver_gateway.connectors.fb_bus.entities.setting import (
+    DeviceSettingEntity,
+    RegisterSettingEntity,
+)
+from miniserver_gateway.connectors.fb_bus.types.types import (
+    RegistersTypes,
+    SettingsTypes,
+)
 
 
 #
@@ -38,138 +45,94 @@ class FbBusConnectorInterface(ABC):
     ADDRESS_NOT_ASSIGNED: int = 255
 
     @abstractmethod
-    def receive(
-            self,
-            sender_address: int or None,
-            payload: str,
-            length: int
-    ) -> None:
+    def receive(self, sender_address: int or None, payload: str, length: int) -> None:
         pass
 
     @abstractmethod
-    def enable_searching(
-            self
-    ) -> None:
+    def enable_searching(self) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def disable_searching(
-            self
-    ) -> None:
+    def disable_searching(self) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
     def send_packet(
-            self,
-            address: int,
-            payload: list,
-            waiting_time: float = 0.0
+        self, address: int, payload: list, waiting_time: float = 0.0
     ) -> bool:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def broadcast_packet(
-            self,
-            payload: list,
-            waiting_time: float = 0.0
-    ) -> bool:
+    def broadcast_packet(self, payload: list, waiting_time: float = 0.0) -> bool:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def propagate_device(
-            self,
-            device: DeviceEntity
-    ) -> None:
+    def propagate_device(self, device: DeviceEntity) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def propagate_register(
-            self,
-            register: RegisterEntity
-    ) -> None:
+    def propagate_register(self, register: RegisterEntity) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
     def propagate_setting(
-            self,
-            register: DeviceSettingEntity or RegisterSettingEntity
+        self, register: DeviceSettingEntity or RegisterSettingEntity
     ) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def propagate_device_state(
-            self,
-            updated_device: DeviceEntity
-    ) -> None:
+    def propagate_device_state(self, updated_device: DeviceEntity) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def get_device_by_id(
-            self,
-            identifier: uuid.UUID
-    ) -> DeviceEntity or None:
+    def get_device_by_id(self, identifier: uuid.UUID) -> DeviceEntity or None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def get_device_by_address(
-            self,
-            address: int
-    ) -> DeviceEntity or None:
+    def get_device_by_address(self, address: int) -> DeviceEntity or None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def get_device_by_serial_number(
-            self,
-            serial_number: str
-    ) -> DeviceEntity or None:
+    def get_device_by_serial_number(self, serial_number: str) -> DeviceEntity or None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def create_device(
-            self,
-            serial_number: str,
-            max_packet_length: int
-    ) -> DeviceEntity:
+    def create_device(self, serial_number: str, max_packet_length: int) -> DeviceEntity:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def update_device(
-            self,
-            updated_device: DeviceEntity
-    ) -> None:
+    def update_device(self, updated_device: DeviceEntity) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
     def get_registers_by_type(
-            self,
-            device: DeviceEntity,
-            register_type: RegistersTypes
+        self, device: DeviceEntity, register_type: RegistersTypes
     ) -> List[RegisterEntity]:
         pass
 
@@ -177,10 +140,7 @@ class FbBusConnectorInterface(ABC):
 
     @abstractmethod
     def get_register_by_address(
-            self,
-            device: DeviceEntity,
-            register_type: RegistersTypes,
-            register_address: int
+        self, device: DeviceEntity, register_type: RegistersTypes, register_address: int
     ) -> RegisterEntity or None:
         pass
 
@@ -188,49 +148,37 @@ class FbBusConnectorInterface(ABC):
 
     @abstractmethod
     def create_register(
-            self,
-            device: DeviceEntity,
-            register_address: int,
-            register_type: RegistersTypes,
-            register_data_type: int
+        self,
+        device: DeviceEntity,
+        register_address: int,
+        register_type: RegistersTypes,
+        register_data_type: int,
     ) -> RegisterEntity or None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def update_register(
-            self,
-            updated_register: RegisterEntity
-    ) -> None:
+    def update_register(self, updated_register: RegisterEntity) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def delete_register(
-            self,
-            deleted_register: RegisterEntity
-    ) -> None:
+    def delete_register(self, deleted_register: RegisterEntity) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def update_register_value(
-            self,
-            updated_register: RegisterEntity,
-            value
-    ) -> None:
+    def update_register_value(self, updated_register: RegisterEntity, value) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
     def get_settings_by_type(
-            self,
-            device: DeviceEntity,
-            settings_type: SettingsTypes
+        self, device: DeviceEntity, settings_type: SettingsTypes
     ) -> List[DeviceSettingEntity or RegisterSettingEntity]:
         pass
 
@@ -238,10 +186,7 @@ class FbBusConnectorInterface(ABC):
 
     @abstractmethod
     def get_setting_by_address(
-            self,
-            device: DeviceEntity,
-            setting_type: SettingsTypes,
-            setting_address: int
+        self, device: DeviceEntity, setting_type: SettingsTypes, setting_address: int
     ) -> DeviceSettingEntity or RegisterSettingEntity or None:
         pass
 
@@ -249,10 +194,7 @@ class FbBusConnectorInterface(ABC):
 
     @abstractmethod
     def create_setting(
-            self,
-            device: DeviceEntity,
-            setting_address: int,
-            setting_type: SettingsTypes
+        self, device: DeviceEntity, setting_address: int, setting_type: SettingsTypes
     ) -> RegisterEntity or None:
         pass
 
@@ -260,8 +202,7 @@ class FbBusConnectorInterface(ABC):
 
     @abstractmethod
     def update_setting(
-            self,
-            updated_setting: DeviceSettingEntity or RegisterSettingEntity
+        self, updated_setting: DeviceSettingEntity or RegisterSettingEntity
     ) -> None:
         pass
 
@@ -269,7 +210,6 @@ class FbBusConnectorInterface(ABC):
 
     @abstractmethod
     def delete_setting(
-            self,
-            deleted_setting: DeviceSettingEntity or RegisterSettingEntity
+        self, deleted_setting: DeviceSettingEntity or RegisterSettingEntity
     ) -> None:
         pass

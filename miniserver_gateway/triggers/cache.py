@@ -19,11 +19,16 @@ import uuid
 from abc import ABC
 from pony.orm import core as orm
 from typing import Dict, List
+
 # App libs
 from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
-from miniserver_gateway.db.models import TriggerEntity, AutomaticTriggerEntity,\
-    DevicePropertyConditionEntity, ChannelPropertyConditionEntity,\
-    ChannelPropertyActionEntity
+from miniserver_gateway.db.models import (
+    TriggerEntity,
+    AutomaticTriggerEntity,
+    DevicePropertyConditionEntity,
+    ChannelPropertyConditionEntity,
+    ChannelPropertyActionEntity,
+)
 from miniserver_gateway.db.types import ConditionOperators
 from miniserver_gateway.utils.properties import PropertiesUtils
 
@@ -50,10 +55,7 @@ class TriggerItem:
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            trigger_id: uuid.UUID
-    ) -> None:
+    def __init__(self, trigger_id: uuid.UUID) -> None:
         self.__trigger_id = trigger_id
 
         self.__device_property_actions = dict()
@@ -68,32 +70,26 @@ class TriggerItem:
     # -----------------------------------------------------------------------------
 
     @property
-    def trigger_id(
-            self
-    ) -> uuid.UUID:
+    def trigger_id(self) -> uuid.UUID:
         return self.__trigger_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def is_fulfilled(
-            self
-    ) -> bool:
+    def is_fulfilled(self) -> bool:
         return self.__is_fulfilled
 
     # -----------------------------------------------------------------------------
 
     @property
-    def is_triggered(
-            self
-    ) -> bool:
+    def is_triggered(self) -> bool:
         return self.__is_triggered
 
     # -----------------------------------------------------------------------------
 
     @property
     def actions(
-            self
+        self,
     ) -> Dict[str, "DevicePropertyConditionItem" or "ChannelPropertyConditionItem"]:
         return {**self.__device_property_actions, **self.__channel_property_actions}
 
@@ -101,16 +97,19 @@ class TriggerItem:
 
     @property
     def conditions(
-            self
+        self,
     ) -> Dict[str, "DevicePropertyConditionItem" or "ChannelPropertyConditionItem"]:
-        return {**self.__device_property_conditions, **self.__channel_property_conditions}
+        return {
+            **self.__device_property_conditions,
+            **self.__channel_property_conditions,
+        }
 
     # -----------------------------------------------------------------------------
 
     def add_condition(
-            self,
-            condition_id: str,
-            condition: "DevicePropertyConditionItem" or "ChannelPropertyConditionItem"
+        self,
+        condition_id: str,
+        condition: "DevicePropertyConditionItem" or "ChannelPropertyConditionItem",
     ) -> None:
         if isinstance(condition, DevicePropertyConditionItem):
             self.__device_property_conditions[condition_id] = condition
@@ -121,9 +120,9 @@ class TriggerItem:
     # -----------------------------------------------------------------------------
 
     def add_action(
-            self,
-            action_id: str,
-            action: "DevicePropertyActionItem" or "ChannelPropertyActionItem"
+        self,
+        action_id: str,
+        action: "DevicePropertyActionItem" or "ChannelPropertyActionItem",
     ) -> None:
         if isinstance(action, DevicePropertyActionItem):
             self.__device_property_actions[action_id] = action
@@ -134,9 +133,7 @@ class TriggerItem:
     # -----------------------------------------------------------------------------
 
     def check_property_item(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem,
-            value: str
+        self, item: DevicePropertyItem or ChannelPropertyItem, value: str
     ) -> None:
         if isinstance(item, DevicePropertyItem):
             for condition in self.__device_property_conditions.values():
@@ -161,9 +158,7 @@ class TriggerItem:
 
     # -----------------------------------------------------------------------------
 
-    def __check_fulfillment(
-            self
-    ) -> None:
+    def __check_fulfillment(self) -> None:
         self.__is_fulfilled = True
 
         for condition in self.__device_property_conditions.values():
@@ -176,9 +171,7 @@ class TriggerItem:
 
     # -----------------------------------------------------------------------------
 
-    def __check_triggers(
-            self
-    ) -> None:
+    def __check_triggers(self) -> None:
         self.__is_triggered = True
 
         for action in self.__device_property_actions.values():
@@ -212,12 +205,12 @@ class PropertyConditionItem(ABC):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            condition_id: uuid.UUID,
-            enabled: bool,
-            operator: ConditionOperators,
-            operand: str,
-            device: str
+        self,
+        condition_id: uuid.UUID,
+        enabled: bool,
+        operator: ConditionOperators,
+        operand: str,
+        device: str,
     ) -> None:
         self.__condition_id = condition_id
         self.__enabled = enabled
@@ -232,49 +225,37 @@ class PropertyConditionItem(ABC):
     # -----------------------------------------------------------------------------
 
     @property
-    def condition_id(
-            self
-    ) -> uuid.UUID:
+    def condition_id(self) -> uuid.UUID:
         return self.__condition_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def enabled(
-            self
-    ) -> bool:
+    def enabled(self) -> bool:
         return self.__enabled
 
     # -----------------------------------------------------------------------------
 
     @property
-    def operator(
-            self
-    ) -> ConditionOperators:
+    def operator(self) -> ConditionOperators:
         return self.__operator
 
     # -----------------------------------------------------------------------------
 
     @property
-    def operand(
-            self
-    ) -> str:
+    def operand(self) -> str:
         return self.__operand
 
     # -----------------------------------------------------------------------------
 
     @property
-    def is_fulfilled(
-            self
-    ) -> bool:
+    def is_fulfilled(self) -> bool:
         return self.__is_fulfilled
 
     # -----------------------------------------------------------------------------
 
     def validate(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem,
-            value: str
+        self, item: DevicePropertyItem or ChannelPropertyItem, value: str
     ) -> bool:
         normalized_value = PropertiesUtils.normalize_value(item, value)
         normalized_operand = PropertiesUtils.normalize_value(item, self.operand)
@@ -308,13 +289,13 @@ class DevicePropertyConditionItem(PropertyConditionItem):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            condition_id: uuid.UUID,
-            enabled: bool,
-            operator: ConditionOperators,
-            operand: str,
-            device_property: str,
-            device: str
+        self,
+        condition_id: uuid.UUID,
+        enabled: bool,
+        operator: ConditionOperators,
+        operand: str,
+        device_property: str,
+        device: str,
     ) -> None:
         super().__init__(condition_id, enabled, operator, operand, device)
 
@@ -323,18 +304,12 @@ class DevicePropertyConditionItem(PropertyConditionItem):
     # -----------------------------------------------------------------------------
 
     @property
-    def device_property(
-            self
-    ) -> str:
+    def device_property(self) -> str:
         return self.__device_property
 
     # -----------------------------------------------------------------------------
 
-    def validate(
-            self,
-            item: DevicePropertyItem,
-            value: str
-    ) -> bool:
+    def validate(self, item: DevicePropertyItem, value: str) -> bool:
         return super().validate(item, value)
 
 
@@ -353,14 +328,14 @@ class ChannelPropertyConditionItem(PropertyConditionItem):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            condition_id: uuid.UUID,
-            enabled: bool,
-            operator: ConditionOperators,
-            operand: str,
-            channel_property: str,
-            channel: str,
-            device: str
+        self,
+        condition_id: uuid.UUID,
+        enabled: bool,
+        operator: ConditionOperators,
+        operand: str,
+        channel_property: str,
+        channel: str,
+        device: str,
     ) -> None:
         super().__init__(condition_id, enabled, operator, operand, device)
 
@@ -370,18 +345,12 @@ class ChannelPropertyConditionItem(PropertyConditionItem):
     # -----------------------------------------------------------------------------
 
     @property
-    def channel_property(
-            self
-    ) -> str:
+    def channel_property(self) -> str:
         return self.__channel_property
 
     # -----------------------------------------------------------------------------
 
-    def validate(
-            self,
-            item: ChannelPropertyItem,
-            value: str
-    ) -> bool:
+    def validate(self, item: ChannelPropertyItem, value: str) -> bool:
         return super().validate(item, value)
 
 
@@ -406,11 +375,7 @@ class PropertyActionItem(ABC):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            action_id: uuid.UUID,
-            enabled: bool,
-            value: str,
-            device: str
+        self, action_id: uuid.UUID, enabled: bool, value: str, device: str
     ) -> None:
         self.__action_id = action_id
         self.__enabled = enabled
@@ -424,48 +389,39 @@ class PropertyActionItem(ABC):
     # -----------------------------------------------------------------------------
 
     @property
-    def action_id(
-            self
-    ) -> uuid.UUID:
+    def action_id(self) -> uuid.UUID:
         return self.__action_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def enabled(
-            self
-    ) -> bool:
+    def enabled(self) -> bool:
         return self.__enabled
 
     # -----------------------------------------------------------------------------
 
     @property
-    def value(
-            self
-    ) -> str:
+    def value(self) -> str:
         return self.__value
 
     # -----------------------------------------------------------------------------
 
     @property
-    def is_triggered(
-            self
-    ) -> bool:
+    def is_triggered(self) -> bool:
         return self.__is_triggered
 
     # -----------------------------------------------------------------------------
 
     def validate(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem,
-            value: str
+        self, item: DevicePropertyItem or ChannelPropertyItem, value: str
     ) -> bool:
         if self.__value == "toggle":
             self.__is_triggered = False
 
         else:
-            self.__is_triggered = \
-                PropertiesUtils.normalize_value(item, self.__value) == PropertiesUtils.normalize_value(item, value)
+            self.__is_triggered = PropertiesUtils.normalize_value(
+                item, self.__value
+            ) == PropertiesUtils.normalize_value(item, value)
 
         return self.__is_triggered
 
@@ -484,12 +440,12 @@ class DevicePropertyActionItem(PropertyActionItem):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            action_id: uuid.UUID,
-            enabled: bool,
-            value: str,
-            device_property: str,
-            device: str
+        self,
+        action_id: uuid.UUID,
+        enabled: bool,
+        value: str,
+        device_property: str,
+        device: str,
     ) -> None:
         super().__init__(action_id, enabled, value, device)
 
@@ -498,18 +454,12 @@ class DevicePropertyActionItem(PropertyActionItem):
     # -----------------------------------------------------------------------------
 
     @property
-    def device_property(
-            self
-    ) -> str:
+    def device_property(self) -> str:
         return self.__device_property
 
     # -----------------------------------------------------------------------------
 
-    def validate(
-            self,
-            item: DevicePropertyItem,
-            value: str
-    ) -> bool:
+    def validate(self, item: DevicePropertyItem, value: str) -> bool:
         return super().validate(item, value)
 
 
@@ -528,13 +478,13 @@ class ChannelPropertyActionItem(PropertyActionItem):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            action_id: uuid.UUID,
-            enabled: bool,
-            value: str,
-            channel_property: str,
-            channel: str,
-            device: str
+        self,
+        action_id: uuid.UUID,
+        enabled: bool,
+        value: str,
+        channel_property: str,
+        channel: str,
+        device: str,
     ) -> None:
         super().__init__(action_id, enabled, value, device)
 
@@ -544,18 +494,12 @@ class ChannelPropertyActionItem(PropertyActionItem):
     # -----------------------------------------------------------------------------
 
     @property
-    def channel_property(
-            self
-    ) -> str:
+    def channel_property(self) -> str:
         return self.__channel_property
 
     # -----------------------------------------------------------------------------
 
-    def validate(
-            self,
-            item: ChannelPropertyItem,
-            value: str
-    ) -> bool:
+    def validate(self, item: ChannelPropertyItem, value: str) -> bool:
         return super().validate(item, value)
 
 
@@ -575,9 +519,7 @@ class TriggersCache:
     # -----------------------------------------------------------------------------
 
     @orm.db_session
-    def load(
-            self
-    ) -> None:
+    def load(self) -> None:
         self.__triggers = []
 
         for trigger in TriggerEntity.select():
@@ -594,8 +536,8 @@ class TriggersCache:
                                 condition.operator,
                                 condition.operand,
                                 condition.device_property,
-                                condition.device
-                            )
+                                condition.device,
+                            ),
                         )
 
                     elif isinstance(condition, ChannelPropertyConditionEntity):
@@ -608,8 +550,8 @@ class TriggersCache:
                                 condition.operand,
                                 condition.channel_property,
                                 condition.channel,
-                                condition.device
-                            )
+                                condition.device,
+                            ),
                         )
 
             for action in trigger.actions:
@@ -617,29 +559,25 @@ class TriggersCache:
                     trigger_cache.add_action(
                         action.action_id.__str__(),
                         ChannelPropertyActionItem(
-                                action.action_id,
-                                action.enabled,
-                                action.value,
-                                action.channel_property,
-                                action.channel,
-                                action.device
-                        )
+                            action.action_id,
+                            action.enabled,
+                            action.value,
+                            action.channel_property,
+                            action.channel,
+                            action.device,
+                        ),
                     )
 
             self.__triggers.append(trigger_cache)
 
     # -----------------------------------------------------------------------------
 
-    def __iter__(
-            self
-    ) -> "TriggersCache":
+    def __iter__(self) -> "TriggersCache":
         return self
 
     # -----------------------------------------------------------------------------
 
-    def __next__(
-            self
-    ) -> TriggerItem:
+    def __next__(self) -> TriggerItem:
         if self.__iterator_index < len(self.__triggers):
             result: TriggerItem = self.__triggers[self.__iterator_index]
 

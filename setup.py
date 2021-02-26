@@ -47,11 +47,12 @@ setup(
               "miniserver_gateway.utils",
               ],
     install_requires=[
-        "setuptools",
-        "PyYAML",
-        "simplejson",
+        "pjon_cython",
         "pony",
+        "PyYAML",
         "redis",
+        "setuptools",
+        "simplejson",
         "whistle"
     ],
     download_url="https://github.com/FastyBird/miniserver-gateway/archive/%s.tar.gz" % VERSION,

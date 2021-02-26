@@ -16,6 +16,7 @@
 
 # App dependencies
 from abc import ABC
+
 # App libs
 from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
 from miniserver_gateway.utils.properties import PropertiesUtils
@@ -36,9 +37,9 @@ class SavePropertyValueQueueItem(ABC):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem,
-            value: bool or int or float or str or None
+        self,
+        item: DevicePropertyItem or ChannelPropertyItem,
+        value: bool or int or float or str or None,
     ) -> None:
         self.__item = item
 
@@ -48,17 +49,13 @@ class SavePropertyValueQueueItem(ABC):
     # -----------------------------------------------------------------------------
 
     @property
-    def item(
-            self
-    ) -> DevicePropertyItem or ChannelPropertyItem:
+    def item(self) -> DevicePropertyItem or ChannelPropertyItem:
         return self.__item
 
     # -----------------------------------------------------------------------------
 
     @property
-    def value(
-            self
-    ) -> bool or int or float or str or None:
+    def value(self) -> bool or int or float or str or None:
         """Normalized property value"""
         return self.__value
 
@@ -78,9 +75,9 @@ class SavePropertyExpectedValueQueueItem(ABC):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem,
-            expected_value: bool or int or float or str or None
+        self,
+        item: DevicePropertyItem or ChannelPropertyItem,
+        expected_value: bool or int or float or str or None,
     ) -> None:
         self.__item = item
 
@@ -90,16 +87,12 @@ class SavePropertyExpectedValueQueueItem(ABC):
     # -----------------------------------------------------------------------------
 
     @property
-    def item(
-            self
-    ) -> DevicePropertyItem or ChannelPropertyItem:
+    def item(self) -> DevicePropertyItem or ChannelPropertyItem:
         return self.__item
 
     # -----------------------------------------------------------------------------
 
     @property
-    def expected_value(
-            self
-    ) -> bool or int or float or str or None:
+    def expected_value(self) -> bool or int or float or str or None:
         """Normalized property value"""
         return self.__expected_value

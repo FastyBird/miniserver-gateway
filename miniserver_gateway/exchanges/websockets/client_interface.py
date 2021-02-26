@@ -19,7 +19,6 @@ from abc import ABC, abstractmethod
 
 
 class WampClientInterface(ABC):
-
     @abstractmethod
     def get_id(self) -> str:
         pass
@@ -27,7 +26,7 @@ class WampClientInterface(ABC):
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def send_close(self, status: int = 1000, reason: str = u'') -> None:
+    def send_close(self, status: int = 1000, reason: str = u"") -> None:
         pass
 
     # -----------------------------------------------------------------------------

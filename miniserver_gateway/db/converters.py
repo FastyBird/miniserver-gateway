@@ -35,9 +35,7 @@ class EnumConverter(Converter):
     __type: Enum
 
     @staticmethod
-    def _get_real_converter(
-            py_type
-    ) -> Type[Converter]:
+    def _get_real_converter(py_type) -> Type[Converter]:
         """
         Gets a converter for the underlying type.
         """
@@ -56,38 +54,28 @@ class EnumConverter(Converter):
             return StrConverter
 
         else:
-            raise TypeError('only str and int based enums supported')
+            raise TypeError("only str and int based enums supported")
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            provider,
-            py_type,
-            attr=None
-    ) -> None:
+    def __init__(self, provider, py_type, attr=None) -> None:
         Converter.__init__(self, provider, py_type, attr)
 
         self.__type = py_type
         self.__converter_class = self._get_real_converter(self.py_type)
-        self.__converter = self.__converter_class(provider=self.provider, py_type=self.py_type, attr=self.attr)
+        self.__converter = self.__converter_class(
+            provider=self.provider, py_type=self.py_type, attr=self.attr
+        )
 
     # -----------------------------------------------------------------------------
 
-    def init(
-            self,
-            kwargs
-    ) -> None:
+    def init(self, kwargs) -> None:
         if hasattr(self, "__converter"):
             self.__converter.init(kwargs=kwargs)
 
     # -----------------------------------------------------------------------------
 
-    def validate(
-            self,
-            val,
-            obj=None
-    ):
+    def validate(self, val, obj=None):
         if val is not None and isinstance(val, Enum):
             return self.__converter.validate(val=val.value, obj=obj)
 
@@ -98,37 +86,23 @@ class EnumConverter(Converter):
 
     # -----------------------------------------------------------------------------
 
-    def py2sql(
-            self,
-            val
-    ):
+    def py2sql(self, val):
         return self.__converter.py2sql(val=val)
 
     # -----------------------------------------------------------------------------
 
-    def sql2py(
-            self,
-            val
-    ):
+    def sql2py(self, val):
         return self.__converter.sql2py(val=val)
 
     # -----------------------------------------------------------------------------
 
-    def val2dbval(
-            self,
-            val,
-            obj=None
-    ):
+    def val2dbval(self, val, obj=None):
         """ passes on the value to the right converter """
         return self.__converter.val2dbval(val=val, obj=obj)
 
     # -----------------------------------------------------------------------------
 
-    def dbval2val(
-            self,
-            dbval,
-            obj=None
-    ):
+    def dbval2val(self, dbval, obj=None):
         """ passes on the value to the right converter """
         py_val = self.__converter.dbval2val(dbval=dbval, obj=obj)
 
@@ -139,25 +113,15 @@ class EnumConverter(Converter):
 
     # -----------------------------------------------------------------------------
 
-    def dbvals_equal(
-            self,
-            x,
-            y
-    ):
+    def dbvals_equal(self, x, y):
         self.__converter.dbvals_equal(x=x, y=y)
 
     # -----------------------------------------------------------------------------
 
-    def get_sql_type(
-            self,
-            attr=None
-    ):
+    def get_sql_type(self, attr=None):
         return self.__converter.get_sql_type(attr=attr)
 
     # -----------------------------------------------------------------------------
 
-    def get_fk_type(
-            self,
-            sql_type
-    ):
+    def get_fk_type(self, sql_type):
         return self.__converter.get_fk_type(sql_type=sql_type)

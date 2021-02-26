@@ -32,26 +32,18 @@ class FireTriggerActionQueueItem:
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            trigger: TriggerItem,
-            action: PropertyActionItem
-    ) -> None:
+    def __init__(self, trigger: TriggerItem, action: PropertyActionItem) -> None:
         self.__trigger = trigger
         self.__action = action
 
     # -----------------------------------------------------------------------------
 
     @property
-    def trigger(
-            self
-    ) -> TriggerItem:
+    def trigger(self) -> TriggerItem:
         return self.__trigger
 
     # -----------------------------------------------------------------------------
 
     @property
-    def action(
-            self
-    ) -> PropertyActionItem:
+    def action(self) -> PropertyActionItem:
         return self.__action

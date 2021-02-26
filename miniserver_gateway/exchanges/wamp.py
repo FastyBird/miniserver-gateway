@@ -18,11 +18,16 @@
 import json
 import time
 from typing import Dict
+
 # App libs
 from miniserver_gateway.constants import APP_ORIGIN, WS_SERVER_TOPIC
 from miniserver_gateway.events.dispatcher import app_dispatcher
 from miniserver_gateway.exchanges.exchanges import log, Exchanges, ExchangeInterface
-from miniserver_gateway.exchanges.websockets.events import SubscribeEvent, UnsubscribeEvent, ReceiveProcedureRequestEvent
+from miniserver_gateway.exchanges.websockets.events import (
+    SubscribeEvent,
+    UnsubscribeEvent,
+    ReceiveProcedureRequestEvent,
+)
 from miniserver_gateway.exchanges.websockets.client import WampClientInterface
 from miniserver_gateway.exchanges.websockets.types import WampCodes
 from miniserver_gateway.exchanges.websockets.server import WebsocketsServer
@@ -47,27 +52,23 @@ class WampExchange(ExchangeInterface):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            config: dict,
-            exchange: Exchanges
-    ) -> None:
+    def __init__(self, config: dict, exchange: Exchanges) -> None:
         super().__init__(config)
 
         self.__container = exchange
 
         app_dispatcher.add_listener(SubscribeEvent.EVENT_NAME, self.__subscribe)
         app_dispatcher.add_listener(UnsubscribeEvent.EVENT_NAME, self.__unsubscribe)
-        app_dispatcher.add_listener(ReceiveProcedureRequestEvent.EVENT_NAME, self.__receive)
+        app_dispatcher.add_listener(
+            ReceiveProcedureRequestEvent.EVENT_NAME, self.__receive
+        )
 
         # WS server for UI clients
         self.__ws_server = WebsocketsServer()
 
     # -----------------------------------------------------------------------------
 
-    def close(
-            self
-    ) -> None:
+    def close(self) -> None:
         # Terminate web sockets server
         self.__ws_server.close()
 
@@ -84,11 +85,7 @@ class WampExchange(ExchangeInterface):
 
     # -----------------------------------------------------------------------------
 
-    def publish(
-            self,
-            routing_key: str,
-            data: dict
-    ) -> None:
+    def publish(self, routing_key: str, data: dict) -> None:
         message: dict = {
             "routing_key": routing_key,
             "origin": APP_ORIGIN,
@@ -96,71 +93,87 @@ class WampExchange(ExchangeInterface):
         }
 
         for client in self.__subscribers.values():
-            client.send_message(json.dumps([
-                WampCodes(WampCodes.MSG_EVENT).value,
-                WS_SERVER_TOPIC,
-                json.dumps(message)
-            ]))
+            client.send_message(
+                json.dumps(
+                    [
+                        WampCodes(WampCodes.MSG_EVENT).value,
+                        WS_SERVER_TOPIC,
+                        json.dumps(message),
+                    ]
+                )
+            )
 
         log.debug(
-            "Successfully published message to: {} consumers with key: {}"
-            .format(len(self.__subscribers), routing_key)
+            "Successfully published message to: {} consumers via WS with key: {}".format(
+                len(self.__subscribers), routing_key
+            )
         )
 
     # -----------------------------------------------------------------------------
 
-    def __receive(
-            self,
-            event: ReceiveProcedureRequestEvent
-    ) -> None:
+    def __receive(self, event: ReceiveProcedureRequestEvent) -> None:
         try:
             if self.__container.process_received_message(event.data):
-                event.client.send_message(json.dumps([
-                    WampCodes(WampCodes.MSG_CALL_RESULT).value,
-                    event.rpc_id,
-                    {
-                        "response": "accepted",
-                    }
-                ]))
+                event.client.send_message(
+                    json.dumps(
+                        [
+                            WampCodes(WampCodes.MSG_CALL_RESULT).value,
+                            event.rpc_id,
+                            {
+                                "response": "accepted",
+                            },
+                        ]
+                    )
+                )
 
             else:
-                event.client.send_message(json.dumps([
-                    WampCodes(WampCodes.MSG_CALL_ERROR).value,
-                    event.rpc_id,
-                    {
-                        "response": "Provided message could not be handled",
-                    }
-                ]))
+                event.client.send_message(
+                    json.dumps(
+                        [
+                            WampCodes(WampCodes.MSG_CALL_ERROR).value,
+                            event.rpc_id,
+                            {
+                                "response": "Provided message could not be handled",
+                            },
+                        ]
+                    )
+                )
 
         except Exception as e:
             log.exception(e)
 
-            event.client.send_message(json.dumps([
-                WampCodes(WampCodes.MSG_CALL_ERROR).value,
-                event.rpc_id,
-                {
-                    "response": "Provided message could not be handled",
-                }
-            ]))
+            event.client.send_message(
+                json.dumps(
+                    [
+                        WampCodes(WampCodes.MSG_CALL_ERROR).value,
+                        event.rpc_id,
+                        {
+                            "response": "Provided message could not be handled",
+                        },
+                    ]
+                )
+            )
 
     # -----------------------------------------------------------------------------
 
-    def __subscribe(
-            self,
-            event: SubscribeEvent
-    ) -> None:
+    def __subscribe(self, event: SubscribeEvent) -> None:
         if event.client.get_id() not in self.__subscribers.keys():
             self.__subscribers[event.client.get_id()] = event.client
 
-            log.info("New client: {} has subscribed to exchanges topic".format(event.client.get_id()))
+            log.info(
+                "New client: {} has subscribed to exchanges topic".format(
+                    event.client.get_id()
+                )
+            )
 
     # -----------------------------------------------------------------------------
 
-    def __unsubscribe(
-            self,
-            event: UnsubscribeEvent
-    ) -> None:
+    def __unsubscribe(self, event: UnsubscribeEvent) -> None:
         if event.client.get_id() in self.__subscribers.keys():
             del self.__subscribers[event.client.get_id()]
 
-            log.info("Client: {} has unsubscribed from exchanges topic".format(event.client.get_id()))
+            log.info(
+                "Client: {} has unsubscribed from exchanges topic".format(
+                    event.client.get_id()
+                )
+            )

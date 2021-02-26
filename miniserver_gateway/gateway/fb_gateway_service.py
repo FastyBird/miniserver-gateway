@@ -20,6 +20,7 @@ import time
 from os import path
 from threading import Thread
 from yaml import safe_load
+
 # App libs
 from miniserver_gateway.connectors.connectors import Connectors
 from miniserver_gateway.constants import LOG_LEVEL
@@ -55,14 +56,11 @@ class FBGatewayService:
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            config_file: str = None
-    ) -> None:
+    def __init__(self, config_file: str = None) -> None:
         if config_file is None:
-            config_file =\
-                path.dirname(path.dirname(path.abspath(__file__))) +\
-                "/config/fb_gateway.yaml".replace("/", path.sep)
+            config_file = path.dirname(
+                path.dirname(path.abspath(__file__))
+            ) + "/config/fb_gateway.yaml".replace("/", path.sep)
 
         with open(config_file) as general_config:
             self.__configuration = safe_load(general_config)
@@ -75,7 +73,7 @@ class FBGatewayService:
             host=self.__configuration.get("database").get("host", "127.0.0.1"),
             user=self.__configuration.get("database").get("user", "root"),
             passwd=self.__configuration.get("database").get("passwd", ""),
-            db=self.__configuration.get("database").get("db", "miniserver_app")
+            db=self.__configuration.get("database").get("db", "miniserver_app"),
         )
         db.generate_mapping(create_tables=False)
         # orm.set_sql_debug()
@@ -89,7 +87,9 @@ class FBGatewayService:
         self.__storages = Storages(storages_configuration)
 
         # Initialize connectors
-        connectors_configuration: list = list(self.__configuration.get("connectors", {}))
+        connectors_configuration: list = list(
+            self.__configuration.get("connectors", {})
+        )
         self.__connectors = Connectors(connectors_configuration)
 
         self.__triggers = Trigger()
@@ -118,9 +118,7 @@ class FBGatewayService:
 
     # -----------------------------------------------------------------------------
 
-    def __stop_gateway(
-            self
-    ) -> None:
+    def __stop_gateway(self) -> None:
         self.__stopped = True
 
         log.info("Stopping...")
@@ -156,10 +154,7 @@ class FBGatewayService:
 
     # -----------------------------------------------------------------------------
 
-    def __wait_for_thread_to_close(
-            self,
-            thread_service: Thread
-    ) -> None:
+    def __wait_for_thread_to_close(self, thread_service: Thread) -> None:
         now: float = time.time()
 
         waiting_for_closing: bool = True

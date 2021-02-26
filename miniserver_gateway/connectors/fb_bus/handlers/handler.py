@@ -16,6 +16,7 @@
 
 # App libs
 from abc import ABC, abstractmethod
+
 # App libs
 from miniserver_gateway.connectors.fb_bus.entities.device import DeviceEntity
 from miniserver_gateway.connectors.fb_bus.types.types import Packets
@@ -30,9 +31,10 @@ from miniserver_gateway.connectors.fb_bus.types.types import Packets
 # @author         Adam Kadlec <adam.kadlec@fastybird.com>
 #
 class Handler(ABC):
-
     @abstractmethod
-    def receive(self, packet: Packets, sender_address: int, payload: str, length: int) -> None:
+    def receive(
+        self, packet: Packets, sender_address: int, payload: str, length: int
+    ) -> None:
         pass
 
     @abstractmethod

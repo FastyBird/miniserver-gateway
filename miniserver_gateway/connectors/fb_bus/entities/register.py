@@ -16,6 +16,7 @@
 
 # App libs
 import uuid
+
 # App libs
 from miniserver_gateway.connectors.fb_bus.types.types import DataTypes, RegistersTypes
 
@@ -42,14 +43,14 @@ class RegisterEntity:
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            index: uuid.UUID,
-            key: str,
-            channel_id: uuid.UUID,
-            device_id: uuid.UUID,
-            register_address: int,
-            register_type: RegistersTypes,
-            register_data_type: DataTypes
+        self,
+        index: uuid.UUID,
+        key: str,
+        channel_id: uuid.UUID,
+        device_id: uuid.UUID,
+        register_address: int,
+        register_type: RegistersTypes,
+        register_data_type: DataTypes,
     ) -> None:
         self.__id = index
         self.__key = key
@@ -62,77 +63,66 @@ class RegisterEntity:
 
     # -----------------------------------------------------------------------------
 
-    def get_id(
-            self
-    ) -> uuid.UUID:
+    def get_id(self) -> uuid.UUID:
         return self.__id
 
     # -----------------------------------------------------------------------------
 
-    def get_key(
-            self
-    ) -> str:
+    def get_key(self) -> str:
         return self.__key
 
     # -----------------------------------------------------------------------------
 
-    def get_device_id(
-            self
-    ) -> uuid.UUID:
+    def get_device_id(self) -> uuid.UUID:
         return self.__device_id
 
     # -----------------------------------------------------------------------------
 
-    def get_channel_id(
-            self
-    ) -> uuid.UUID:
+    def get_channel_id(self) -> uuid.UUID:
         return self.__channel_id
 
     # -----------------------------------------------------------------------------
 
-    def get_address(
-            self
-    ) -> int:
+    def get_address(self) -> int:
         return self.__address
 
     # -----------------------------------------------------------------------------
 
-    def get_type(
-            self
-    ) -> RegistersTypes:
+    def get_type(self) -> RegistersTypes:
         return self.__type
 
     # -----------------------------------------------------------------------------
 
-    def is_writable(
-            self
-    ) -> bool:
-        return self.__type == RegistersTypes.FB_REGISTER_DO\
-               or self.__type == RegistersTypes.FB_REGISTER_AO
+    def is_writable(self) -> bool:
+        return (
+            self.__type == RegistersTypes.FB_REGISTER_DO
+            or self.__type == RegistersTypes.FB_REGISTER_AO
+        )
 
     # -----------------------------------------------------------------------------
 
-    def get_data_type(
-            self
-    ) -> DataTypes:
+    def get_data_type(self) -> DataTypes:
         return self.__data_type
 
     # -----------------------------------------------------------------------------
 
-    def set_data_type(
-            self,
-            data_type: DataTypes
-    ) -> None:
-        if data_type == DataTypes.FB_DATA_TYPE_UINT8 or data_type == DataTypes.FB_DATA_TYPE_INT8:
+    def set_data_type(self, data_type: DataTypes) -> None:
+        if (
+            data_type == DataTypes.FB_DATA_TYPE_UINT8
+            or data_type == DataTypes.FB_DATA_TYPE_INT8
+        ):
             self.__size = 1
 
-        elif data_type == DataTypes.FB_DATA_TYPE_UINT16 or data_type == DataTypes.FB_DATA_TYPE_INT16:
+        elif (
+            data_type == DataTypes.FB_DATA_TYPE_UINT16
+            or data_type == DataTypes.FB_DATA_TYPE_INT16
+        ):
             self.__size = 2
 
         elif (
-                data_type == DataTypes.FB_DATA_TYPE_UINT32
-                or data_type == DataTypes.FB_DATA_TYPE_INT32
-                or data_type == DataTypes.FB_DATA_TYPE_FLOAT32
+            data_type == DataTypes.FB_DATA_TYPE_UINT32
+            or data_type == DataTypes.FB_DATA_TYPE_INT32
+            or data_type == DataTypes.FB_DATA_TYPE_FLOAT32
         ):
             self.__size = 4
 
@@ -146,15 +136,10 @@ class RegisterEntity:
 
     # -----------------------------------------------------------------------------
 
-    def get_value(
-            self
-    ) -> int or float or bool or None:
+    def get_value(self) -> int or float or bool or None:
         return self.__value
 
     # -----------------------------------------------------------------------------
 
-    def set_value(
-            self,
-            value: int or float or bool
-    ) -> None:
+    def set_value(self, value: int or float or bool) -> None:
         self.__value = value

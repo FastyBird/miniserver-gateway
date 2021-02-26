@@ -28,30 +28,20 @@ from typing import Tuple
 # @author         Adam Kadlec <adam.kadlec@fastybird.com>
 #
 class TransportInterface(ABC):
-
     @abstractmethod
-    def broadcast_packet(
-            self,
-            payload: list,
-            waiting_time: float = 0.0
-    ) -> bool:
+    def broadcast_packet(self, payload: list, waiting_time: float = 0.0) -> bool:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
     def send_packet(
-            self,
-            address: int,
-            payload: list,
-            waiting_time: float = 0.0
+        self, address: int, payload: list, waiting_time: float = 0.0
     ) -> bool:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def run(
-            self
-    ) -> int:
+    def run(self) -> int:
         pass

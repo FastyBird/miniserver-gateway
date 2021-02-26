@@ -17,15 +17,27 @@
 # App dependencies
 import struct
 from typing import List
+
 # App libs
-from miniserver_gateway.db.models import DevicePropertyEntity, DeviceConfigurationEntity,\
-    ChannelPropertyEntity, ChannelConfigurationEntity
+from miniserver_gateway.db.models import (
+    DevicePropertyEntity,
+    DeviceConfigurationEntity,
+    ChannelPropertyEntity,
+    ChannelConfigurationEntity,
+)
 from miniserver_gateway.db.types import DeviceStates, DataType
 from miniserver_gateway.exceptions.invalid_state import InvalidStateException
 from miniserver_gateway.connectors.fb_bus.entities.register import RegisterEntity
-from miniserver_gateway.connectors.fb_bus.entities.setting import DeviceSettingEntity, RegisterSettingEntity
-from miniserver_gateway.connectors.fb_bus.types.types import Packets, PacketsContents,\
-    DataTypes, DeviceStates as DevicePayloadStates
+from miniserver_gateway.connectors.fb_bus.entities.setting import (
+    DeviceSettingEntity,
+    RegisterSettingEntity,
+)
+from miniserver_gateway.connectors.fb_bus.types.types import (
+    Packets,
+    PacketsContents,
+    DataTypes,
+    DeviceStates as DevicePayloadStates,
+)
 
 
 #
@@ -37,18 +49,16 @@ from miniserver_gateway.connectors.fb_bus.types.types import Packets, PacketsCon
 # @author         Adam Kadlec <adam.kadlec@fastybird.com>
 #
 class Helpers:
-
     @staticmethod
-    def extract_text_from_payload(
-            payload: str,
-            start_pointer: int
-    ) -> str:
+    def extract_text_from_payload(payload: str, start_pointer: int) -> str:
         serial_number: List[chr] = []
 
         for i in range(start_pointer, len(payload)):
             if (
-                    int(payload[i]) == PacketsContents(PacketsContents.FB_CONTENT_DATA_SPACE).value or
-                    int(payload[i]) == PacketsContents(PacketsContents.FB_CONTENT_TERMINATOR).value
+                int(payload[i])
+                == PacketsContents(PacketsContents.FB_CONTENT_DATA_SPACE).value
+                or int(payload[i])
+                == PacketsContents(PacketsContents.FB_CONTENT_TERMINATOR).value
             ):
                 break
 
@@ -59,12 +69,12 @@ class Helpers:
     # -----------------------------------------------------------------------------
 
     @staticmethod
-    def find_space_in_payload(
-            payload: str,
-            start_pointer: int
-    ) -> int:
+    def find_space_in_payload(payload: str, start_pointer: int) -> int:
         for i in range(start_pointer, len(payload)):
-            if int(payload[i]) == PacketsContents(PacketsContents.FB_CONTENT_DATA_SPACE).value:
+            if (
+                int(payload[i])
+                == PacketsContents(PacketsContents.FB_CONTENT_DATA_SPACE).value
+            ):
                 return i
 
         return -1
@@ -72,9 +82,7 @@ class Helpers:
     # -----------------------------------------------------------------------------
 
     @staticmethod
-    def transform_state_for_gateway(
-            received_state: int
-    ) -> DeviceStates:
+    def transform_state_for_gateway(received_state: int) -> DeviceStates:
         if DevicePayloadStates.has_value(received_state):
             device_state: DevicePayloadStates = DevicePayloadStates(received_state)
 
@@ -104,10 +112,9 @@ class Helpers:
 # @author         Adam Kadlec <adam.kadlec@fastybird.com>
 #
 class DataTypeHelper:
-
     @staticmethod
     def transform_for_gateway(
-            item: RegisterEntity or DeviceSettingEntity or RegisterSettingEntity
+        item: RegisterEntity or DeviceSettingEntity or RegisterSettingEntity,
     ) -> DataType or None:
         if item.get_data_type() == DataTypes.FB_DATA_TYPE_BOOL:
             return DataType(DataType.DATA_TYPE_BOOLEAN)
@@ -139,7 +146,10 @@ class DataTypeHelper:
 
     @staticmethod
     def transform_for_device(
-            entity: DevicePropertyEntity or ChannelPropertyEntity or DeviceConfigurationEntity or ChannelConfigurationEntity
+        entity: DevicePropertyEntity
+        or ChannelPropertyEntity
+        or DeviceConfigurationEntity
+        or ChannelConfigurationEntity,
     ) -> DataTypes:
         if entity.data_type == DataType.DATA_TYPE_BOOLEAN:
             return DataTypes(DataTypes.FB_DATA_TYPE_BOOL)
@@ -180,11 +190,9 @@ class DataTypeHelper:
 # @author         Adam Kadlec <adam.kadlec@fastybird.com>
 #
 class RegistersHelper:
-
     @staticmethod
     def transform_value_from_bytes(
-            register: RegisterEntity,
-            write_value: List[int]
+        register: RegisterEntity, write_value: List[int]
     ) -> int or float or None:
         if register.get_data_type() == DataTypes.FB_DATA_TYPE_FLOAT32:
             [transformed] = struct.unpack("<f", bytearray(write_value))
@@ -192,18 +200,18 @@ class RegistersHelper:
             return transformed
 
         elif (
-                register.get_data_type() == DataTypes.FB_DATA_TYPE_UINT8
-                or register.get_data_type() == DataTypes.FB_DATA_TYPE_UINT16
-                or register.get_data_type() == DataTypes.FB_DATA_TYPE_UINT32
+            register.get_data_type() == DataTypes.FB_DATA_TYPE_UINT8
+            or register.get_data_type() == DataTypes.FB_DATA_TYPE_UINT16
+            or register.get_data_type() == DataTypes.FB_DATA_TYPE_UINT32
         ):
             [transformed] = struct.unpack("<I", bytearray(write_value))
 
             return transformed
 
         elif (
-                register.get_data_type() == DataTypes.FB_DATA_TYPE_INT8
-                or register.get_data_type() == DataTypes.FB_DATA_TYPE_INT16
-                or register.get_data_type() == DataTypes.FB_DATA_TYPE_INT32
+            register.get_data_type() == DataTypes.FB_DATA_TYPE_INT8
+            or register.get_data_type() == DataTypes.FB_DATA_TYPE_INT16
+            or register.get_data_type() == DataTypes.FB_DATA_TYPE_INT32
         ):
             [transformed] = struct.unpack("<i", bytearray(write_value))
 
@@ -215,23 +223,22 @@ class RegistersHelper:
 
     @staticmethod
     def transform_value_to_bytes(
-            register: RegisterEntity,
-            write_value: int or float
+        register: RegisterEntity, write_value: int or float
     ) -> bytearray or None:
         if register.get_data_type() == DataTypes.FB_DATA_TYPE_FLOAT32:
             return struct.pack("<f", write_value)
 
         elif (
-                register.get_data_type() == DataTypes.FB_DATA_TYPE_UINT8
-                or register.get_data_type() == DataTypes.FB_DATA_TYPE_UINT16
-                or register.get_data_type() == DataTypes.FB_DATA_TYPE_UINT32
+            register.get_data_type() == DataTypes.FB_DATA_TYPE_UINT8
+            or register.get_data_type() == DataTypes.FB_DATA_TYPE_UINT16
+            or register.get_data_type() == DataTypes.FB_DATA_TYPE_UINT32
         ):
             return struct.pack("<I", write_value)
 
         elif (
-                register.get_data_type() == DataTypes.FB_DATA_TYPE_INT8
-                or register.get_data_type() == DataTypes.FB_DATA_TYPE_INT16
-                or register.get_data_type() == DataTypes.FB_DATA_TYPE_INT32
+            register.get_data_type() == DataTypes.FB_DATA_TYPE_INT8
+            or register.get_data_type() == DataTypes.FB_DATA_TYPE_INT16
+            or register.get_data_type() == DataTypes.FB_DATA_TYPE_INT32
         ):
             return struct.pack("<i", write_value)
 

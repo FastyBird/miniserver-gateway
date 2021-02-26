@@ -17,6 +17,7 @@
 # App dependencies
 from abc import ABC
 from whistle import Event
+
 # App libs
 from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
 
@@ -40,11 +41,11 @@ class StoragePropertyStoredEvent(ABC, Event):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            record: DevicePropertyItem or ChannelPropertyItem,
-            value: str or int or float or bool or None = None,
-            expected_value: str or int or float or bool or None = None,
-            pending: bool = False
+        self,
+        record: DevicePropertyItem or ChannelPropertyItem,
+        value: str or int or float or bool or None = None,
+        expected_value: str or int or float or bool or None = None,
+        pending: bool = False,
     ) -> None:
         self.__record = record
         self.__value = value
@@ -54,31 +55,23 @@ class StoragePropertyStoredEvent(ABC, Event):
     # -----------------------------------------------------------------------------
 
     @property
-    def record(
-            self
-    ) -> DevicePropertyItem or ChannelPropertyItem:
+    def record(self) -> DevicePropertyItem or ChannelPropertyItem:
         return self.__record
 
     # -----------------------------------------------------------------------------
 
     @property
-    def value(
-            self
-    ) -> str or int or float or bool or None:
+    def value(self) -> str or int or float or bool or None:
         return self.__value
 
     # -----------------------------------------------------------------------------
 
     @property
-    def expected_value(
-            self
-    ) -> str or int or float or bool or None:
+    def expected_value(self) -> str or int or float or bool or None:
         return self.__expected_value
 
     # -----------------------------------------------------------------------------
 
     @property
-    def is_pending(
-            self
-    ) -> bool:
+    def is_pending(self) -> bool:
         return self.__pending

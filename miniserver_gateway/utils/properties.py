@@ -28,11 +28,10 @@ from miniserver_gateway.db.types import DataType
 # @author         Adam Kadlec <adam.kadlec@fastybird.com>
 #
 class PropertiesUtils:
-
     @staticmethod
     def normalize_value(
-            item: DevicePropertyItem or ChannelPropertyItem,
-            value: int or float or str or bool or None
+        item: DevicePropertyItem or ChannelPropertyItem,
+        value: int or float or str or bool or None,
     ) -> int or float or str or bool or None:
         if value is None:
             return None

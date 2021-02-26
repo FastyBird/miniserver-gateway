@@ -16,9 +16,12 @@
 
 # App dependencies
 from typing import List
+
 # App libs
 from miniserver_gateway.connectors.connectors import log
-from miniserver_gateway.connectors.fb_bus.fb_bus_connector_interface import FbBusConnectorInterface
+from miniserver_gateway.connectors.fb_bus.fb_bus_connector_interface import (
+    FbBusConnectorInterface,
+)
 from miniserver_gateway.connectors.fb_bus.entities.device import DeviceEntity
 from miniserver_gateway.connectors.fb_bus.entities.register import RegisterEntity
 from miniserver_gateway.connectors.fb_bus.handlers.handler import Handler
@@ -41,34 +44,20 @@ class ReportingHandler(Handler):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            connector: FbBusConnectorInterface
-    ) -> None:
+    def __init__(self, connector: FbBusConnectorInterface) -> None:
         self.__connector = connector
 
     # -----------------------------------------------------------------------------
 
     def receive(
-            self,
-            packet: Packets,
-            sender_address: int,
-            payload: str,
-            length: int
+        self, packet: Packets, sender_address: int, payload: str, length: int
     ) -> None:
         if packet == Packets.FB_PACKET_REPORT_SINGLE_REGISTER:
-            self.__reported_single_registers_receiver(
-                sender_address,
-                payload,
-                length
-            )
+            self.__reported_single_registers_receiver(sender_address, payload, length)
 
     # -----------------------------------------------------------------------------
 
-    def handle(
-            self,
-            device: DeviceEntity
-    ) -> None:
+    def handle(self, device: DeviceEntity) -> None:
         pass
 
     # -----------------------------------------------------------------------------
@@ -82,13 +71,12 @@ class ReportingHandler(Handler):
     # n+1   => Packet null terminator           => FB_PACKET_TERMINATOR
 
     def __reported_single_registers_receiver(
-            self,
-            sender_address: int,
-            payload: str,
-            payload_length: int
+        self, sender_address: int, payload: str, payload_length: int
     ) -> None:
         # Get device info from registry
-        device: DeviceEntity or None = self.__connector.get_device_by_address(sender_address)
+        device: DeviceEntity or None = self.__connector.get_device_by_address(
+            sender_address
+        )
 
         if device is None:
             return
@@ -105,9 +93,7 @@ class ReportingHandler(Handler):
         register_address: int = (int(payload[2]) << 8) | int(payload[3])
 
         register: RegisterEntity = self.__connector.get_register_by_address(
-            device,
-            register_type,
-            register_address
+            device, register_type, register_address
         )
 
         if register is not None:
@@ -124,7 +110,9 @@ class ReportingHandler(Handler):
                     int(payload[7]),
                 ]
 
-                transformed: int or float or None = RegistersHelper.transform_value_from_bytes(register, write_value)
+                transformed: int or float or None = (
+                    RegistersHelper.transform_value_from_bytes(register, write_value)
+                )
 
                 if transformed is not None:
                     self.__connector.update_register_value(register, transformed)

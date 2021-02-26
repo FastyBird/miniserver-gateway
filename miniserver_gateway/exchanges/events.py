@@ -17,6 +17,7 @@
 # App dependencies
 from abc import ABC
 from whistle import Event
+
 # App libs
 from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
 
@@ -38,9 +39,9 @@ class ExchangePropertyExpectedValueEvent(ABC, Event):
     # -----------------------------------------------------------------------------
 
     def __init__(
-            self,
-            record: DevicePropertyItem or ChannelPropertyItem,
-            expected: str or int or float or bool
+        self,
+        record: DevicePropertyItem or ChannelPropertyItem,
+        expected: str or int or float or bool,
     ) -> None:
         self.__record = record
         self.__expected = expected
@@ -48,15 +49,11 @@ class ExchangePropertyExpectedValueEvent(ABC, Event):
     # -----------------------------------------------------------------------------
 
     @property
-    def item(
-            self
-    ) -> DevicePropertyItem or ChannelPropertyItem:
+    def item(self) -> DevicePropertyItem or ChannelPropertyItem:
         return self.__record
 
     # -----------------------------------------------------------------------------
 
     @property
-    def expected(
-            self
-    ) -> str or int or float or bool:
+    def expected(self) -> str or int or float or bool:
         return self.__expected

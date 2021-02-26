@@ -17,7 +17,7 @@
 # App dependencies
 import logging
 
-APP_ORIGIN: str = "com.fastybird.gateway"
+APP_ORIGIN: str = "com.fastybird.miniserver"
 
 WS_SERVER_TOPIC: str = "/io/exchange"
 

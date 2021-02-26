@@ -1,1 +1,1 @@
-# FastyBird miniserver gateway
+# FastyBird MiniServer gateway

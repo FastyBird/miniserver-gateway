@@ -52,26 +52,18 @@ class DatabaseEntityChangedEvent(ABC, Event):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            entity: orm.Entity,
-            action_type: EntityChangedType
-    ) -> None:
+    def __init__(self, entity: orm.Entity, action_type: EntityChangedType) -> None:
         self.__entity = entity
         self.__action_type = action_type
 
     # -----------------------------------------------------------------------------
 
     @property
-    def entity(
-            self
-    ) -> orm.Entity:
+    def entity(self) -> orm.Entity:
         return self.__entity
 
     # -----------------------------------------------------------------------------
 
     @property
-    def action_type(
-            self
-    ) -> EntityChangedType:
+    def action_type(self) -> EntityChangedType:
         return self.__action_type

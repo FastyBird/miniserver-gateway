@@ -45,14 +45,17 @@ class LibrariesUtils:
 
     @staticmethod
     def check_and_import_connector(
-            extension_type: str,
-            module_name: str
+        extension_type: str, module_name: str
     ) -> ABCMeta or None:
         if LibrariesUtils.loaded_connector_libraries.get(module_name) is None:
             base_dir: str = path.dirname(path.dirname(__file__))
 
             extensions_paths: List[str] = [
-                path.abspath(base_dir + "/connectors/".replace("/", path.sep) + extension_type.lower()),
+                path.abspath(
+                    base_dir
+                    + "/connectors/".replace("/", path.sep)
+                    + extension_type.lower()
+                ),
             ]
 
             extension_class = LibrariesUtils.load_module(module_name, extensions_paths)
@@ -73,9 +76,7 @@ class LibrariesUtils:
     # -----------------------------------------------------------------------------
 
     @staticmethod
-    def check_and_import_storage(
-            module_name: str
-    ) -> ABCMeta or None:
+    def check_and_import_storage(module_name: str) -> ABCMeta or None:
         if LibrariesUtils.loaded_storage_libraries.get(module_name) is None:
             base_dir: str = path.dirname(path.dirname(__file__))
 
@@ -101,9 +102,7 @@ class LibrariesUtils:
     # -----------------------------------------------------------------------------
 
     @staticmethod
-    def check_and_import_exchange(
-            module_name: str
-    ) -> ABCMeta or None:
+    def check_and_import_exchange(module_name: str) -> ABCMeta or None:
         if LibrariesUtils.loaded_exchange_libraries.get(module_name) is None:
             base_dir: str = path.dirname(path.dirname(__file__))
 
@@ -129,10 +128,7 @@ class LibrariesUtils:
     # -----------------------------------------------------------------------------
 
     @staticmethod
-    def load_module(
-            module_name: str,
-            extensions_paths: List[str]
-    ) -> ABCMeta or None:
+    def load_module(module_name: str, extensions_paths: List[str]) -> ABCMeta or None:
         try:
             for extension_path in extensions_paths:
                 if path.exists(extension_path):
@@ -140,8 +136,7 @@ class LibrariesUtils:
                         if not file.startswith("__") and file.endswith(".py"):
                             try:
                                 module_spec = util.spec_from_file_location(
-                                    module_name,
-                                    extension_path + path.sep + file
+                                    module_name, extension_path + path.sep + file
                                 )
 
                                 if module_spec is None:
@@ -153,7 +148,11 @@ class LibrariesUtils:
 
                                 for extension_class in getmembers(module, isclass):
                                     if module_name in extension_class:
-                                        log.debug("Import %s from %s.", module_name, extension_path)
+                                        log.debug(
+                                            "Import %s from %s.",
+                                            module_name,
+                                            extension_path,
+                                        )
 
                                         return extension_class[1]
 
@@ -161,7 +160,11 @@ class LibrariesUtils:
                                 continue
 
                 else:
-                    log.error("Import %s failed, path %s doesn't exist", module_name, extension_path)
+                    log.error(
+                        "Import %s failed, path %s doesn't exist",
+                        module_name,
+                        extension_path,
+                    )
 
         except Exception as e:
             log.exception(e)
@@ -171,10 +174,7 @@ class LibrariesUtils:
     # -----------------------------------------------------------------------------
 
     @staticmethod
-    def install_package(
-            package: str,
-            version: str = "upgrade"
-    ) -> bool:
+    def install_package(package: str, version: str = "upgrade") -> bool:
         from sys import executable
         from subprocess import check_call, CalledProcessError
 
@@ -182,10 +182,14 @@ class LibrariesUtils:
 
         if version.lower() == "upgrade":
             try:
-                result = check_call([executable, "-m", "pip", "install", package, "--upgrade", "--user"])
+                result = check_call(
+                    [executable, "-m", "pip", "install", package, "--upgrade", "--user"]
+                )
 
             except CalledProcessError:
-                result = check_call([executable, "-m", "pip", "install", package, "--upgrade"])
+                result = check_call(
+                    [executable, "-m", "pip", "install", package, "--upgrade"]
+                )
 
         else:
             from pkg_resources import get_distribution
@@ -202,9 +206,26 @@ class LibrariesUtils:
                 installation_sign = "==" if ">=" not in version else ""
 
                 try:
-                    result = check_call([executable, "-m", "pip", "install", package + installation_sign + version, "--user"])
+                    result = check_call(
+                        [
+                            executable,
+                            "-m",
+                            "pip",
+                            "install",
+                            package + installation_sign + version,
+                            "--user",
+                        ]
+                    )
 
                 except CalledProcessError:
-                    result = check_call([executable, "-m", "pip", "install", package + installation_sign + version])
+                    result = check_call(
+                        [
+                            executable,
+                            "-m",
+                            "pip",
+                            "install",
+                            package + installation_sign + version,
+                        ]
+                    )
 
         return result

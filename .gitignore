@@ -16,7 +16,7 @@ miniserver_gateway/storage/data/
 /python3-thingsboard-gateway.deb
 /python3-thingsboard-gateway.rpm
 /miniserver_gateway.egg-info/
-/docker/python3-thingsboard-gateway.deb
+/docker/python3-miniserver-gateway.deb
 /data/
 __pycache__
 /miniserver_gateway/config/

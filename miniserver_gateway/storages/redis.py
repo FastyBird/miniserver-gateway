@@ -18,6 +18,7 @@
 import json
 from redis import Redis
 from typing import Dict
+
 # App libs
 from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
 from miniserver_gateway.storages.storages import log, StorageInterface, StorageItem
@@ -40,10 +41,7 @@ class RedisStorageSettings:
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            config: dict
-    ) -> None:
+    def __init__(self, config: dict) -> None:
         self.__host = config.get("host", "127.0.0.1")
         self.__port = int(config.get("port", 6379))
         self.__username = config.get("username", None)
@@ -52,33 +50,25 @@ class RedisStorageSettings:
     # -----------------------------------------------------------------------------
 
     @property
-    def host(
-            self
-    ) -> str:
+    def host(self) -> str:
         return self.__host
 
     # -----------------------------------------------------------------------------
 
     @property
-    def port(
-            self
-    ) -> int:
+    def port(self) -> int:
         return self.__port
 
     # -----------------------------------------------------------------------------
 
     @property
-    def username(
-            self
-    ) -> str or None:
+    def username(self) -> str or None:
         return self.__username
 
     # -----------------------------------------------------------------------------
 
     @property
-    def password(
-            self
-    ) -> str or None:
+    def password(self) -> str or None:
         return self.__password
 
 
@@ -99,46 +89,41 @@ class RedisStorage(StorageInterface):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            config: dict
-    ) -> None:
+    def __init__(self, config: dict) -> None:
         super().__init__(config)
 
         self.__settings = RedisStorageSettings(config)
 
-        self.__redis_client = Redis(host=self.__settings.host, port=self.__settings.port)
+        self.__redis_client = Redis(
+            host=self.__settings.host, port=self.__settings.port
+        )
 
     # -----------------------------------------------------------------------------
 
-    def close(
-            self
-    ) -> None:
+    def close(self) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
-    def clear_cache(
-            self
-    ) -> None:
+    def clear_cache(self) -> None:
         self.__data_cache = {}
 
     # -----------------------------------------------------------------------------
 
     def write_property_value(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem,
-            value_to_write: int or float or str or bool or None
+        self,
+        item: DevicePropertyItem or ChannelPropertyItem,
+        value_to_write: int or float or str or bool or None,
     ) -> bool:
         storage_key: str = item.property_id.__str__()
 
         stored_data: StorageItem or None = self.read_property_data(item)
 
         if (
-                stored_data is None
-                or stored_data.value is None
-                or value_to_write != stored_data.value
-                or stored_data.is_pending
+            stored_data is None
+            or stored_data.value is None
+            or value_to_write != stored_data.value
+            or stored_data.is_pending
         ):
             data_to_write = {
                 "id": item.property_id.__str__(),
@@ -159,8 +144,9 @@ class RedisStorage(StorageInterface):
 
             if self.__store_into_storage(storage_key, json.dumps(data_to_write)):
                 log.debug(
-                    "Successfully written value for property: {} with value: {}"
-                    .format(storage_key, data_to_write.get("value"))
+                    "Successfully written value for property: {} with value: {}".format(
+                        storage_key, data_to_write.get("value")
+                    )
                 )
 
                 self.__data_cache[storage_key] = StorageItem(
@@ -176,18 +162,18 @@ class RedisStorage(StorageInterface):
     # -----------------------------------------------------------------------------
 
     def write_property_expected(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem,
-            expected_value_to_write: int or float or str or bool or None
+        self,
+        item: DevicePropertyItem or ChannelPropertyItem,
+        expected_value_to_write: int or float or str or bool or None,
     ) -> bool:
         storage_key: str = item.property_id.__str__()
 
         stored_data: StorageItem or None = self.read_property_data(item)
 
         if (
-                stored_data is None
-                or stored_data.value is None
-                or expected_value_to_write != stored_data.value
+            stored_data is None
+            or stored_data.value is None
+            or expected_value_to_write != stored_data.value
         ):
             data_to_write = {
                 "id": item.property_id.__str__(),
@@ -197,7 +183,11 @@ class RedisStorage(StorageInterface):
             }
 
             if self.__store_into_storage(storage_key, json.dumps(data_to_write)):
-                log.debug("Successfully written expected value for property: {}".format(storage_key))
+                log.debug(
+                    "Successfully written expected value for property: {}".format(
+                        storage_key
+                    )
+                )
 
                 self.__data_cache[storage_key] = StorageItem(
                     value=data_to_write.get("value"),
@@ -212,8 +202,7 @@ class RedisStorage(StorageInterface):
     # -----------------------------------------------------------------------------
 
     def read_property_value(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem
+        self, item: DevicePropertyItem or ChannelPropertyItem
     ) -> int or float or str or bool or None:
         stored_data = self.read_property_data(item)
 
@@ -225,8 +214,7 @@ class RedisStorage(StorageInterface):
     # -----------------------------------------------------------------------------
 
     def read_property_expected(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem
+        self, item: DevicePropertyItem or ChannelPropertyItem
     ) -> int or float or str or bool or None:
         stored_data = self.read_property_data(item)
 
@@ -238,8 +226,7 @@ class RedisStorage(StorageInterface):
     # -----------------------------------------------------------------------------
 
     def read_property_data(
-            self,
-            item: DevicePropertyItem or ChannelPropertyItem
+        self, item: DevicePropertyItem or ChannelPropertyItem
     ) -> StorageItem or None:
         storage_key: str = item.property_id.__str__()
 
@@ -258,18 +245,16 @@ class RedisStorage(StorageInterface):
             stored_data_dict: dict = json.loads(stored_data)
 
             if (
-                    "value" in stored_data_dict
-                    and "expected" in stored_data_dict
-                    and "pending" in stored_data_dict
+                "value" in stored_data_dict
+                and "expected" in stored_data_dict
+                and "pending" in stored_data_dict
             ):
                 self.__data_cache[storage_key] = StorageItem(
                     value=PropertiesUtils.normalize_value(
-                        item,
-                        stored_data_dict.get("value", None)
+                        item, stored_data_dict.get("value", None)
                     ),
                     expected=PropertiesUtils.normalize_value(
-                        item,
-                        stored_data_dict.get("expected", None)
+                        item, stored_data_dict.get("expected", None)
                     ),
                     pending=bool(stored_data_dict.get("pending", False)),
                 )
@@ -285,8 +270,9 @@ class RedisStorage(StorageInterface):
             del self.__data_cache[storage_key]
 
             log.error(
-                "Property data for property: {} could not be loaded from storages. Data type error"
-                .format(storage_key)
+                "Property data for property: {} could not be loaded from storages. Data type error".format(
+                    storage_key
+                )
             )
             log.exception(e)
 
@@ -296,8 +282,9 @@ class RedisStorage(StorageInterface):
             del self.__data_cache[storage_key]
 
             log.error(
-                "Property data for property: {} could not be loaded from storages. Json error"
-                .format(storage_key)
+                "Property data for property: {} could not be loaded from storages. Json error".format(
+                    storage_key
+                )
             )
             log.exception(e)
 
@@ -305,9 +292,5 @@ class RedisStorage(StorageInterface):
 
     # -----------------------------------------------------------------------------
 
-    def __store_into_storage(
-            self,
-            key: str,
-            content: str
-    ) -> bool:
+    def __store_into_storage(self, key: str, content: str) -> bool:
         return self.__redis_client.set(key, content)

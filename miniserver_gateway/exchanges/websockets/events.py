@@ -16,6 +16,7 @@
 
 # App dependencies
 from whistle import Event
+
 # App libs
 from miniserver_gateway.exchanges.websockets.client_interface import WampClientInterface
 
@@ -35,18 +36,13 @@ class SubscribeEvent(Event):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            client: WampClientInterface
-    ) -> None:
+    def __init__(self, client: WampClientInterface) -> None:
         self.__client = client
 
     # -----------------------------------------------------------------------------
 
     @property
-    def client(
-            self
-    ) -> WampClientInterface:
+    def client(self) -> WampClientInterface:
         return self.__client
 
 
@@ -65,18 +61,13 @@ class UnsubscribeEvent(Event):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            client: WampClientInterface
-    ) -> None:
+    def __init__(self, client: WampClientInterface) -> None:
         self.__client = client
 
     # -----------------------------------------------------------------------------
 
     @property
-    def client(
-            self
-    ) -> WampClientInterface:
+    def client(self) -> WampClientInterface:
         return self.__client
 
 
@@ -97,12 +88,7 @@ class ReceiveProcedureRequestEvent(Event):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            client: WampClientInterface,
-            rpc_id: str,
-            data: str
-    ) -> None:
+    def __init__(self, client: WampClientInterface, rpc_id: str, data: str) -> None:
         self.__client = client
         self.__rpc_id = rpc_id
         self.__data = data
@@ -110,23 +96,17 @@ class ReceiveProcedureRequestEvent(Event):
     # -----------------------------------------------------------------------------
 
     @property
-    def client(
-            self
-    ) -> WampClientInterface:
+    def client(self) -> WampClientInterface:
         return self.__client
 
     # -----------------------------------------------------------------------------
 
     @property
-    def rpc_id(
-            self
-    ) -> str:
+    def rpc_id(self) -> str:
         return self.__rpc_id
 
     # -----------------------------------------------------------------------------
 
     @property
-    def data(
-            self
-    ) -> str:
+    def data(self) -> str:
         return self.__data

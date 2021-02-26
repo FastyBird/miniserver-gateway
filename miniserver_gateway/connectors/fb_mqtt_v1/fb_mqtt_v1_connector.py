@@ -21,28 +21,20 @@ from string import ascii_lowercase
 class FbMqttV1Connector(Thread):
     __stopped: bool = False
 
-    def __init__(
-            self
-    ) -> None:
+    def __init__(self) -> None:
         super().__init__()
 
         # Threading config...
         self.setDaemon(True)
         self.setName("FB MQTT V1 connector thread")
 
-    def open(
-            self
-    ) -> None:
+    def open(self) -> None:
         self.__stopped = False
         self.start()
 
-    def run(
-            self
-    ) -> None:
+    def run(self) -> None:
         while True:
             sleep(2)
 
-    def close(
-            self
-    ) -> None:
+    def close(self) -> None:
         pass

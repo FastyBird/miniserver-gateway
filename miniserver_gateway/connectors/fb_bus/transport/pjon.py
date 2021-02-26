@@ -17,9 +17,12 @@
 # App dependencies
 import pjon_cython as pjon
 import time
+
 # App libs
 from miniserver_gateway.connectors.connectors import log
-from miniserver_gateway.connectors.fb_bus.fb_bus_connector_interface import FbBusConnectorInterface
+from miniserver_gateway.connectors.fb_bus.fb_bus_connector_interface import (
+    FbBusConnectorInterface,
+)
 from miniserver_gateway.connectors.fb_bus.transport.transport import TransportInterface
 from miniserver_gateway.connectors.fb_bus.types.types import Packets
 from miniserver_gateway.connectors.fb_bus.utilities.packets_helper import PacketsHelper
@@ -44,36 +47,29 @@ class PjonTransportSettings:
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            config: dict
-    ) -> None:
+    def __init__(self, config: dict) -> None:
         self.__address = int(config.get("address", self.__MASTER_ADDRESS))
-        self.__serial_interface = config.get("serial_interface", self.__SERIAL_INTERFACE)
+        self.__serial_interface = config.get(
+            "serial_interface", self.__SERIAL_INTERFACE
+        )
         self.__baud_rate = int(config.get("baud_rate", self.__SERIAL_BAUD_RATE))
 
     # -----------------------------------------------------------------------------
 
     @property
-    def address(
-            self
-    ) -> int:
+    def address(self) -> int:
         return self.__address
 
     # -----------------------------------------------------------------------------
 
     @property
-    def serial_interface(
-            self
-    ) -> str:
+    def serial_interface(self) -> str:
         return self.__serial_interface
 
     # -----------------------------------------------------------------------------
 
     @property
-    def baud_rate(
-            self
-    ) -> int:
+    def baud_rate(self) -> int:
         return self.__baud_rate
 
 
@@ -91,18 +87,14 @@ class PjonTransport(TransportInterface, pjon.ThroughSerialAsync):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-            self,
-            config: dict,
-            connector: FbBusConnectorInterface
-    ) -> None:
+    def __init__(self, config: dict, connector: FbBusConnectorInterface) -> None:
         self.__settings = PjonTransportSettings(config)
 
         pjon.ThroughSerialAsync.__init__(
             self,
             self.__settings.address,
             self.__settings.serial_interface,
-            self.__settings.baud_rate
+            self.__settings.baud_rate,
         )
 
         self.__connector = connector
@@ -112,24 +104,13 @@ class PjonTransport(TransportInterface, pjon.ThroughSerialAsync):
 
     # -----------------------------------------------------------------------------
 
-    def broadcast_packet(
-            self,
-            payload: list,
-            waiting_time: float = 0.0
-    ) -> bool:
-        return self.send_packet(
-            pjon.PJON_BROADCAST,
-            payload,
-            waiting_time
-        )
+    def broadcast_packet(self, payload: list, waiting_time: float = 0.0) -> bool:
+        return self.send_packet(pjon.PJON_BROADCAST, payload, waiting_time)
 
     # -----------------------------------------------------------------------------
 
     def send_packet(
-            self,
-            address: int,
-            payload: list,
-            waiting_time: float = 0.0
+        self, address: int, payload: list, waiting_time: float = 0.0
     ) -> bool:
         self.send(address, bytes(payload))
 
@@ -165,18 +146,15 @@ class PjonTransport(TransportInterface, pjon.ThroughSerialAsync):
 
         if address == pjon.PJON_BROADCAST:
             log.debug(
-                "Successfully sent broadcast packet: {}"
-                .format(
+                "Successfully sent broadcast packet: {}".format(
                     PacketsHelper.get_packet_name(Packets(payload[0]))
                 )
             )
 
         else:
             log.debug(
-                "Successfully sent packet: {} for device with address: {}"
-                .format(
-                    PacketsHelper.get_packet_name(Packets(payload[0])),
-                    address
+                "Successfully sent packet: {} for device with address: {}".format(
+                    PacketsHelper.get_packet_name(Packets(payload[0])), address
                 )
             )
 
@@ -196,9 +174,7 @@ class PjonTransport(TransportInterface, pjon.ThroughSerialAsync):
 
     # -----------------------------------------------------------------------------
 
-    def run(
-            self
-    ) -> int:
+    def run(self) -> int:
         try:
             result = self.loop()
 
@@ -215,12 +191,7 @@ class PjonTransport(TransportInterface, pjon.ThroughSerialAsync):
 
     # -----------------------------------------------------------------------------
 
-    def receive(
-            self,
-            payload: str,
-            length: int,
-            packet_info
-    ) -> None:
+    def receive(self, payload: str, length: int, packet_info) -> None:
         try:
             # Get sender address from header
             sender_address: int = int(packet_info["sender_id"])
