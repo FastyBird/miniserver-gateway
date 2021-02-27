@@ -74,34 +74,20 @@ class ExchangeRoutingUtils:
     }
 
     @staticmethod
-    def get_entity_routing_key(
-        entity: Type[orm.Entity], action_type: EntityChangedType
-    ) -> RoutingKeys or None:
+    def get_entity_routing_key(entity: Type[orm.Entity], action_type: EntityChangedType) -> RoutingKeys or None:
         if action_type == EntityChangedType.ENTITY_CREATED:
             for classname in ExchangeRoutingUtils.CREATED_ENTITIES_ROUTING_KEYS_MAPPING:
                 if issubclass(entity, classname):
-                    return RoutingKeys(
-                        ExchangeRoutingUtils.CREATED_ENTITIES_ROUTING_KEYS_MAPPING[
-                            classname
-                        ]
-                    )
+                    return RoutingKeys(ExchangeRoutingUtils.CREATED_ENTITIES_ROUTING_KEYS_MAPPING[classname])
 
         elif action_type == EntityChangedType.ENTITY_UPDATED:
             for classname in ExchangeRoutingUtils.UPDATED_ENTITIES_ROUTING_KEYS_MAPPING:
                 if issubclass(entity, classname):
-                    return RoutingKeys(
-                        ExchangeRoutingUtils.UPDATED_ENTITIES_ROUTING_KEYS_MAPPING[
-                            classname
-                        ]
-                    )
+                    return RoutingKeys(ExchangeRoutingUtils.UPDATED_ENTITIES_ROUTING_KEYS_MAPPING[classname])
 
         elif action_type == EntityChangedType.ENTITY_DELETED:
             for classname in ExchangeRoutingUtils.DELETED_ENTITIES_ROUTING_KEYS_MAPPING:
                 if issubclass(entity, classname):
-                    return RoutingKeys(
-                        ExchangeRoutingUtils.DELETED_ENTITIES_ROUTING_KEYS_MAPPING[
-                            classname
-                        ]
-                    )
+                    return RoutingKeys(ExchangeRoutingUtils.DELETED_ENTITIES_ROUTING_KEYS_MAPPING[classname])
 
         return None

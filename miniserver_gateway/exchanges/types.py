@@ -36,28 +36,16 @@ class RoutingKeys(Enum):
     DEVICES_CONTROLS_ROUTING_KEY: str = "fb.bus.control.device"
 
     # Devices properties
-    DEVICES_PROPERTY_CREATED_ENTITY_ROUTING_KEY: str = (
-        "fb.bus.entity.created.device.property"
-    )
-    DEVICES_PROPERTY_UPDATED_ENTITY_ROUTING_KEY: str = (
-        "fb.bus.entity.updated.device.property"
-    )
-    DEVICES_PROPERTY_DELETED_ENTITY_ROUTING_KEY: str = (
-        "fb.bus.entity.deleted.device.property"
-    )
+    DEVICES_PROPERTY_CREATED_ENTITY_ROUTING_KEY: str = "fb.bus.entity.created.device.property"
+    DEVICES_PROPERTY_UPDATED_ENTITY_ROUTING_KEY: str = "fb.bus.entity.updated.device.property"
+    DEVICES_PROPERTY_DELETED_ENTITY_ROUTING_KEY: str = "fb.bus.entity.deleted.device.property"
 
     DEVICES_PROPERTIES_DATA_ROUTING_KEY: str = "fb.bus.data.device.property"
 
     # Devices configuration
-    DEVICES_CONFIGURATION_CREATED_ENTITY_ROUTING_KEY: str = (
-        "fb.bus.entity.created.device.configuration"
-    )
-    DEVICES_CONFIGURATION_UPDATED_ENTITY_ROUTING_KEY: str = (
-        "fb.bus.entity.updated.device.configuration"
-    )
-    DEVICES_CONFIGURATION_DELETED_ENTITY_ROUTING_KEY: str = (
-        "fb.bus.entity.deleted.device.configuration"
-    )
+    DEVICES_CONFIGURATION_CREATED_ENTITY_ROUTING_KEY: str = "fb.bus.entity.created.device.configuration"
+    DEVICES_CONFIGURATION_UPDATED_ENTITY_ROUTING_KEY: str = "fb.bus.entity.updated.device.configuration"
+    DEVICES_CONFIGURATION_DELETED_ENTITY_ROUTING_KEY: str = "fb.bus.entity.deleted.device.configuration"
 
     DEVICES_CONFIGURATION_DATA_ROUTING_KEY: str = "fb.bus.data.device.configuration"
 
@@ -69,27 +57,15 @@ class RoutingKeys(Enum):
     CHANNELS_CONTROLS_ROUTING_KEY: str = "fb.bus.control.channel"
 
     # Channels properties
-    CHANNELS_PROPERTY_CREATED_ENTITY_ROUTING_KEY: str = (
-        "fb.bus.entity.created.channel.property"
-    )
-    CHANNELS_PROPERTY_UPDATED_ENTITY_ROUTING_KEY: str = (
-        "fb.bus.entity.updated.channel.property"
-    )
-    CHANNELS_PROPERTY_DELETED_ENTITY_ROUTING_KEY: str = (
-        "fb.bus.entity.deleted.channel.property"
-    )
+    CHANNELS_PROPERTY_CREATED_ENTITY_ROUTING_KEY: str = "fb.bus.entity.created.channel.property"
+    CHANNELS_PROPERTY_UPDATED_ENTITY_ROUTING_KEY: str = "fb.bus.entity.updated.channel.property"
+    CHANNELS_PROPERTY_DELETED_ENTITY_ROUTING_KEY: str = "fb.bus.entity.deleted.channel.property"
 
     CHANNELS_PROPERTIES_DATA_ROUTING_KEY: str = "fb.bus.data.channel.property"
 
     # Channels configuration
-    CHANNELS_CONFIGURATION_CREATED_ENTITY_ROUTING_KEY: str = (
-        "fb.bus.entity.created.channel.configuration"
-    )
-    CHANNELS_CONFIGURATION_UPDATED_ENTITY_ROUTING_KEY: str = (
-        "fb.bus.entity.updated.channel.configuration"
-    )
-    CHANNELS_CONFIGURATION_DELETED_ENTITY_ROUTING_KEY: str = (
-        "fb.bus.entity.deleted.channel.configuration"
-    )
+    CHANNELS_CONFIGURATION_CREATED_ENTITY_ROUTING_KEY: str = "fb.bus.entity.created.channel.configuration"
+    CHANNELS_CONFIGURATION_UPDATED_ENTITY_ROUTING_KEY: str = "fb.bus.entity.updated.channel.configuration"
+    CHANNELS_CONFIGURATION_DELETED_ENTITY_ROUTING_KEY: str = "fb.bus.entity.deleted.channel.configuration"
 
     CHANNELS_CONFIGURATION_DATA_ROUTING_KEY: str = "fb.bus.data.channel.configuration"

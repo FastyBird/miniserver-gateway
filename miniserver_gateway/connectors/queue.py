@@ -48,12 +48,7 @@ class CreateOrUpdateDeviceQueueItem(QueueItem):
     # -----------------------------------------------------------------------------
 
     def __init__(
-        self,
-        connector_id: uuid.UUID,
-        device_id: uuid.UUID,
-        identifier: str,
-        state: DeviceStates,
-        **kwargs
+        self, connector_id: uuid.UUID, device_id: uuid.UUID, identifier: str, state: DeviceStates, **kwargs
     ) -> None:
         self.__connector_id = connector_id
         self.__device_id = device_id
@@ -109,13 +104,7 @@ class CreateOrUpdatePropertyQueueItem(QueueItem):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-        self,
-        device_id: uuid.UUID,
-        property_id: uuid.UUID,
-        property_identifier: str,
-        **kwargs
-    ) -> None:
+    def __init__(self, device_id: uuid.UUID, property_id: uuid.UUID, property_identifier: str, **kwargs) -> None:
         self.__device_id = device_id
         self.__property_id = property_id
         self.__property_identifier = property_identifier
@@ -388,9 +377,7 @@ class CreateOrUpdateChannelConfigurationQueueItem(CreateOrUpdateConfigurationQue
         data_type: DataType,
         **kwargs
     ) -> None:
-        super().__init__(
-            device_id, configuration_id, configuration_identifier, data_type, **kwargs
-        )
+        super().__init__(device_id, configuration_id, configuration_identifier, data_type, **kwargs)
 
         self.__channel_id = channel_id
 

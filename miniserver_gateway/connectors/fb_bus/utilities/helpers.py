@@ -33,7 +33,6 @@ from miniserver_gateway.connectors.fb_bus.entities.setting import (
     RegisterSettingEntity,
 )
 from miniserver_gateway.connectors.fb_bus.types.types import (
-    Packets,
     PacketsContents,
     DataTypes,
     DeviceStates as DevicePayloadStates,
@@ -54,12 +53,7 @@ class Helpers:
         serial_number: List[chr] = []
 
         for i in range(start_pointer, len(payload)):
-            if (
-                int(payload[i])
-                == PacketsContents(PacketsContents.FB_CONTENT_DATA_SPACE).value
-                or int(payload[i])
-                == PacketsContents(PacketsContents.FB_CONTENT_TERMINATOR).value
-            ):
+            if int(payload[i]) == PacketsContents(PacketsContents.FB_CONTENT_DATA_SPACE).value:
                 break
 
             serial_number.append(chr(int(payload[i])))
@@ -71,10 +65,7 @@ class Helpers:
     @staticmethod
     def find_space_in_payload(payload: str, start_pointer: int) -> int:
         for i in range(start_pointer, len(payload)):
-            if (
-                int(payload[i])
-                == PacketsContents(PacketsContents.FB_CONTENT_DATA_SPACE).value
-            ):
+            if int(payload[i]) == PacketsContents(PacketsContents.FB_CONTENT_DATA_SPACE).value:
                 return i
 
         return -1
@@ -176,9 +167,7 @@ class DataTypeHelper:
             return DataTypes(DataTypes.FB_DATA_TYPE_FLOAT32)
 
         else:
-            raise InvalidStateException(
-                "Entity data type is not supported by this connector"
-            )
+            raise InvalidStateException("Entity data type is not supported by this connector")
 
 
 #
@@ -191,9 +180,7 @@ class DataTypeHelper:
 #
 class RegistersHelper:
     @staticmethod
-    def transform_value_from_bytes(
-        register: RegisterEntity, write_value: List[int]
-    ) -> int or float or None:
+    def transform_value_from_bytes(register: RegisterEntity, write_value: List[int]) -> int or float or None:
         if register.get_data_type() == DataTypes.FB_DATA_TYPE_FLOAT32:
             [transformed] = struct.unpack("<f", bytearray(write_value))
 
@@ -222,9 +209,7 @@ class RegistersHelper:
     # -----------------------------------------------------------------------------
 
     @staticmethod
-    def transform_value_to_bytes(
-        register: RegisterEntity, write_value: int or float
-    ) -> bytearray or None:
+    def transform_value_to_bytes(register: RegisterEntity, write_value: int or float) -> bytearray or None:
         if register.get_data_type() == DataTypes.FB_DATA_TYPE_FLOAT32:
             return struct.pack("<f", write_value)
 

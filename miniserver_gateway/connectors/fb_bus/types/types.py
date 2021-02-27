@@ -78,6 +78,23 @@ class PacketsContents(Enum):
 
 
 #
+# Communication protocol versions
+#
+# @package        FastyBird:MiniServer!
+# @subpackage     Connectors
+#
+# @author         Adam Kadlec <adam.kadlec@fastybird.com>
+#
+@unique
+class ProtocolVersions(Enum):
+    PROTOCOL_V1: int = 0x01
+
+    @classmethod
+    def has_value(cls, value: int) -> bool:
+        return value in cls._value2member_map_
+
+
+#
 # Pairing commands
 #
 # @package        FastyBird:MiniServer!

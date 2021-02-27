@@ -16,6 +16,8 @@
 
 # App dependencies
 import logging
+import logging.config
+import logging.handlers
 import time
 from os import path
 from threading import Thread
@@ -23,14 +25,12 @@ from yaml import safe_load
 
 # App libs
 from miniserver_gateway.connectors.connectors import Connectors
-from miniserver_gateway.constants import LOG_LEVEL
 from miniserver_gateway.exchanges.exchanges import Exchanges
 from miniserver_gateway.db.models import db
 from miniserver_gateway.db.cache import device_property_cache, channel_property_cache
 from miniserver_gateway.storages.storages import Storages
 from miniserver_gateway.triggers.triggers import Trigger
 
-logging.basicConfig(level=LOG_LEVEL)
 log = logging.getLogger("service")
 
 
@@ -58,14 +58,24 @@ class FBGatewayService:
 
     def __init__(self, config_file: str = None) -> None:
         if config_file is None:
-            config_file = path.dirname(
-                path.dirname(path.abspath(__file__))
-            ) + "/config/fb_gateway.yaml".replace("/", path.sep)
+            config_file = path.dirname(path.dirname(path.abspath(__file__))) + "/config/fb_gateway.yaml".replace(
+                "/", path.sep
+            )
 
         with open(config_file) as general_config:
             self.__configuration = safe_load(general_config)
 
         self.__configuration_dir = path.dirname(path.abspath(config_file)) + path.sep
+
+        logging_error = None
+
+        try:
+            logging.config.fileConfig(self.__configuration_dir + "logs.conf", disable_existing_loggers=False)
+
+        except Exception as e:
+            logging_error = e
+
+        global log
 
         # Configure database
         db.bind(
@@ -87,9 +97,7 @@ class FBGatewayService:
         self.__storages = Storages(storages_configuration)
 
         # Initialize connectors
-        connectors_configuration: list = list(
-            self.__configuration.get("connectors", {})
-        )
+        connectors_configuration: list = list(self.__configuration.get("connectors", {}))
         self.__connectors = Connectors(connectors_configuration)
 
         self.__triggers = Trigger()

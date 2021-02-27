@@ -5,3 +5,4 @@ pony~=0.7.14
 redis~=3.5.3
 whistle~=1.0.1
 pjon_cython~=11.2
+libscrc~=1.6

@@ -24,7 +24,6 @@ from typing import Dict, List, Set
 
 # App libs
 from miniserver_gateway.connectors.events import ConnectorPropertyValueEvent
-from miniserver_gateway.constants import LOG_LEVEL
 from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
 from miniserver_gateway.events.dispatcher import app_dispatcher
 from miniserver_gateway.exchanges.events import ExchangePropertyExpectedValueEvent
@@ -34,8 +33,8 @@ from miniserver_gateway.storages.queue import (
     SavePropertyExpectedValueQueueItem,
 )
 from miniserver_gateway.utils.libraries import LibrariesUtils
+from miniserver_gateway.types.types import ModulesOrigins
 
-logging.basicConfig(level=LOG_LEVEL)
 log = logging.getLogger("storage")
 
 
@@ -88,9 +87,7 @@ class Storages(Thread):
 
         self.__settings = StoragesSettings(config)
 
-        app_dispatcher.add_listener(
-            ConnectorPropertyValueEvent.EVENT_NAME, self.__store_value_event
-        )
+        app_dispatcher.add_listener(ConnectorPropertyValueEvent.EVENT_NAME, self.__store_value_event)
         app_dispatcher.add_listener(
             ExchangePropertyExpectedValueEvent.EVENT_NAME,
             self.__store_expected_value_event,
@@ -166,26 +163,18 @@ class Storages(Thread):
 
     def __store_value_event(self, event: ConnectorPropertyValueEvent) -> None:
         try:
-            if isinstance(event.record, DevicePropertyItem) or isinstance(
-                event.record, ChannelPropertyItem
-            ):
-                self.__queue.put(
-                    SavePropertyValueQueueItem(event.record, event.actual_value)
-                )
+            if isinstance(event.record, DevicePropertyItem) or isinstance(event.record, ChannelPropertyItem):
+                self.__queue.put(SavePropertyValueQueueItem(event.record, event.actual_value))
 
             else:
                 log.warning("Received unknown connectors event")
 
         except QueueFull:
-            log.error(
-                "Storage processing queue is full. New messages could not be added"
-            )
+            log.error("Storage processing queue is full. New messages could not be added")
 
     # -----------------------------------------------------------------------------
 
-    def __store_expected_value_event(
-        self, event: ExchangePropertyExpectedValueEvent
-    ) -> None:
+    def __store_expected_value_event(self, event: ExchangePropertyExpectedValueEvent) -> None:
         try:
             if isinstance(event.item, DevicePropertyItem):
                 self.__queue.put(
@@ -207,32 +196,29 @@ class Storages(Thread):
                 log.warning("Received unknown exchanges event")
 
         except QueueFull:
-            log.error(
-                "Storage processing queue is full. New messages could not be added"
-            )
+            log.error("Storage processing queue is full. New messages could not be added")
 
     # -----------------------------------------------------------------------------
 
-    def __process_property_value_record(
-        self, record: SavePropertyValueQueueItem
-    ) -> None:
+    def __process_property_value_record(self, record: SavePropertyValueQueueItem) -> None:
         if self.__primary_storage is None:
             return
 
-        if not isinstance(record.item, DevicePropertyItem) and not isinstance(
-            record.item, ChannelPropertyItem
-        ):
+        if not isinstance(record.item, DevicePropertyItem) and not isinstance(record.item, ChannelPropertyItem):
             # Unknown record item
             return
 
+        for storage in self.__storages:
+            if storage != self.__primary_storage:
+                storage.write_property_value(record.item, record.value)
+
         if self.__primary_storage.write_property_value(record.item, record.value):
-            stored_data: StorageItem = self.__primary_storage.read_property_data(
-                record.item
-            )
+            stored_data: StorageItem = self.__primary_storage.read_property_data(record.item)
 
             app_dispatcher.dispatch(
                 StoragePropertyStoredEvent.EVENT_NAME,
                 StoragePropertyStoredEvent(
+                    ModulesOrigins(ModulesOrigins.DEVICES_MODULE),
                     record.item,
                     stored_data.value,
                     stored_data.expected,
@@ -242,9 +228,7 @@ class Storages(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def __process_property_expected_value_record(
-        self, record: SavePropertyExpectedValueQueueItem
-    ) -> None:
+    def __process_property_expected_value_record(self, record: SavePropertyExpectedValueQueueItem) -> None:
         if self.__primary_storage is None:
             return
 
@@ -257,16 +241,17 @@ class Storages(Thread):
         else:
             return
 
-        if self.__primary_storage.write_property_expected(
-            property_item, record.expected_value
-        ):
-            stored_data: StorageItem = self.__primary_storage.read_property_data(
-                property_item
-            )
+        for storage in self.__storages:
+            if storage != self.__primary_storage:
+                storage.write_property_expected(property_item, record.expected_value)
+
+        if self.__primary_storage.write_property_expected(property_item, record.expected_value):
+            stored_data: StorageItem = self.__primary_storage.read_property_data(property_item)
 
             app_dispatcher.dispatch(
                 StoragePropertyStoredEvent.EVENT_NAME,
                 StoragePropertyStoredEvent(
+                    ModulesOrigins(ModulesOrigins.DEVICES_MODULE),
                     property_item,
                     stored_data.value,
                     stored_data.expected,
@@ -285,25 +270,20 @@ class Storages(Thread):
             storage_classname = storage_settings.get("class")
 
             if storage_classname is None:
-                log.error(
-                    "Classname for configured storage: {} is not configured".format(
-                        storage_settings.get("type")
-                    )
-                )
+                log.error("Classname for configured storage: {} is not configured".format(storage_settings.get("type")))
                 continue
 
             try:
                 # Try to import storage class
-                storage_class = LibrariesUtils.check_and_import_storage(
-                    storage_classname
-                )
+                storage_class = LibrariesUtils.check_and_import_storage(storage_classname)
 
-                storage_module: StorageInterface = storage_class(storage_settings)
+                if storage_class is not None:
+                    storage_module: StorageInterface = storage_class(storage_settings)
 
-                if storage_settings.get("primary", False) is True:
-                    self.__primary_storage = storage_module
+                    if storage_settings.get("primary", False) is True:
+                        self.__primary_storage = storage_module
 
-                self.__storages.add(storage_module)
+                    self.__storages.add(storage_module)
 
             except Exception as e:
                 log.error("Error on loading storage:")
@@ -422,7 +402,5 @@ class StorageInterface(ABC):
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def read_property_data(
-        self, item: DevicePropertyItem or ChannelPropertyItem
-    ) -> StorageItem or None:
+    def read_property_data(self, item: DevicePropertyItem or ChannelPropertyItem) -> StorageItem or None:
         pass

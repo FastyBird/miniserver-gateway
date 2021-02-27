@@ -94,10 +94,7 @@ class RegisterEntity:
     # -----------------------------------------------------------------------------
 
     def is_writable(self) -> bool:
-        return (
-            self.__type == RegistersTypes.FB_REGISTER_DO
-            or self.__type == RegistersTypes.FB_REGISTER_AO
-        )
+        return self.__type == RegistersTypes.FB_REGISTER_DO or self.__type == RegistersTypes.FB_REGISTER_AO
 
     # -----------------------------------------------------------------------------
 
@@ -107,16 +104,10 @@ class RegisterEntity:
     # -----------------------------------------------------------------------------
 
     def set_data_type(self, data_type: DataTypes) -> None:
-        if (
-            data_type == DataTypes.FB_DATA_TYPE_UINT8
-            or data_type == DataTypes.FB_DATA_TYPE_INT8
-        ):
+        if data_type == DataTypes.FB_DATA_TYPE_UINT8 or data_type == DataTypes.FB_DATA_TYPE_INT8:
             self.__size = 1
 
-        elif (
-            data_type == DataTypes.FB_DATA_TYPE_UINT16
-            or data_type == DataTypes.FB_DATA_TYPE_INT16
-        ):
+        elif data_type == DataTypes.FB_DATA_TYPE_UINT16 or data_type == DataTypes.FB_DATA_TYPE_INT16:
             self.__size = 2
 
         elif (

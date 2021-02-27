@@ -126,21 +126,13 @@ class PropertyItem:
             if self.__data_type == DataType.DATA_TYPE_INT:
                 min_value, max_value, *rest = self.__format.split(":") + [None, None]
 
-                if (
-                    min_value is not None
-                    and max_value is not None
-                    and int(min_value) <= int(max_value)
-                ):
+                if min_value is not None and max_value is not None and int(min_value) <= int(max_value):
                     return int(min_value), int(max_value)
 
             elif self.__data_type == DataType.DATA_TYPE_FLOAT:
                 min_value, max_value, *rest = self.__format.split(":") + [None, None]
 
-                if (
-                    min_value is not None
-                    and max_value is not None
-                    and float(min_value) <= float(max_value)
-                ):
+                if min_value is not None and max_value is not None and float(min_value) <= float(max_value):
                     return float(min_value), float(max_value)
 
             elif self.__data_type == DataType.DATA_TYPE_ENUM:
@@ -215,39 +207,43 @@ class ChannelPropertyItem(PropertyItem):
 
 
 class PropertiesRepository:
-    _cache: Dict[str, ChannelPropertyItem or DevicePropertyItem] = {}
+    _cache: Dict[str, ChannelPropertyItem or DevicePropertyItem] or None = None
 
     # -----------------------------------------------------------------------------
 
-    def get_property_by_id(
-        self, property_id: uuid.UUID
-    ) -> DevicePropertyItem or ChannelPropertyItem or None:
-        if len(self._cache) == 0:
+    def get_property_by_id(self, property_id: uuid.UUID) -> DevicePropertyItem or ChannelPropertyItem or None:
+        if self._cache is None:
             self.initialize()
 
-        if property_id.__str__() in self._cache:
-            return self._cache[property_id.__str__()]
+        try:
+            if property_id.__str__() in self._cache:
+                return self._cache[property_id.__str__()]
+
+        except TypeError:
+            pass
 
         return None
 
     # -----------------------------------------------------------------------------
 
-    def get_property_by_key(
-        self, property_key: str
-    ) -> DevicePropertyItem or ChannelPropertyItem or None:
-        if len(self._cache) == 0:
+    def get_property_by_key(self, property_key: str) -> DevicePropertyItem or ChannelPropertyItem or None:
+        if self._cache is None:
             self.initialize()
 
-        for record in self._cache.values():
-            if record.key == property_key:
-                return record
+        try:
+            for record in self._cache.values():
+                if record.key == property_key:
+                    return record
+
+        except TypeError:
+            pass
 
         return None
 
     # -----------------------------------------------------------------------------
 
     def clear_cache(self) -> None:
-        self._cache = {}
+        self._cache = None
 
     # -----------------------------------------------------------------------------
 
@@ -259,8 +255,10 @@ class PropertiesRepository:
 class DevicesPropertiesCache(PropertiesRepository):
     @orm.db_session
     def initialize(self) -> None:
+        data: dict = {}
+
         for entity in DevicePropertyEntity.select():
-            self._cache[entity.property_id.__str__()] = DevicePropertyItem(
+            data[entity.property_id.__str__()] = DevicePropertyItem(
                 property_id=entity.property_id,
                 property_identifier=entity.identifier,
                 property_key=entity.key,
@@ -272,12 +270,16 @@ class DevicesPropertiesCache(PropertiesRepository):
                 device_id=entity.device.device_id,
             )
 
+        self._cache = data
+
 
 class ChannelsPropertiesCache(PropertiesRepository):
     @orm.db_session
     def initialize(self) -> None:
+        data: dict = {}
+
         for entity in ChannelPropertyEntity.select():
-            self._cache[entity.property_id.__str__()] = ChannelPropertyItem(
+            data[entity.property_id.__str__()] = ChannelPropertyItem(
                 property_id=entity.property_id,
                 property_identifier=entity.identifier,
                 property_key=entity.key,
@@ -289,6 +291,8 @@ class ChannelsPropertiesCache(PropertiesRepository):
                 device_id=entity.channel.device.device_id,
                 channel_id=entity.channel.channel_id,
             )
+
+        self._cache = data
 
 
 device_property_cache = DevicesPropertiesCache()

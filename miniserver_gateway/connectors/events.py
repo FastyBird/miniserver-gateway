@@ -20,6 +20,7 @@ from whistle import Event
 
 # App libs
 from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
+from miniserver_gateway.types.types import ModulesOrigins
 
 
 #
@@ -31,6 +32,7 @@ from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
 # @author         Adam Kadlec <adam.kadlec@fastybird.com>
 #
 class ConnectorPropertyValueEvent(ABC, Event):
+    __origin: ModulesOrigins
     __record: DevicePropertyItem or ChannelPropertyItem
     __actual_value: str or int or float or bool
     __previous_value: str or int or float or bool or None
@@ -39,13 +41,21 @@ class ConnectorPropertyValueEvent(ABC, Event):
 
     def __init__(
         self,
+        origin: ModulesOrigins,
         record: DevicePropertyItem or ChannelPropertyItem,
         actual_value: str or int or float or bool,
         previous_value: str or int or float or bool or None,
     ) -> None:
+        self.__origin = origin
         self.__record = record
         self.__actual_value = actual_value
         self.__previous_value = previous_value
+
+    # -----------------------------------------------------------------------------
+
+    @property
+    def origin(self) -> ModulesOrigins:
+        return self.__origin
 
     # -----------------------------------------------------------------------------
 

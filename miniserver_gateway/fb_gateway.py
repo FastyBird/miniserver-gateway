@@ -22,16 +22,11 @@ def main() -> None:
     if "logs" not in listdir(curdir):
         mkdir("logs")
 
-    FBGatewayService(
-        path.dirname(path.abspath(__file__))
-        + "/config/fb_gateway.yaml".replace("/", path.sep)
-    )
+    FBGatewayService(path.dirname(path.abspath(__file__)) + "/config/fb_gateway.yaml".replace("/", path.sep))
 
 
 def daemon() -> None:
-    FBGatewayService(
-        "/etc/miniserver-gateway/config/fb_gateway.yaml".replace("/", path.sep)
-    )
+    FBGatewayService("/etc/miniserver-gateway/config/fb_gateway.yaml".replace("/", path.sep))
 
 
 if __name__ == "__main__":

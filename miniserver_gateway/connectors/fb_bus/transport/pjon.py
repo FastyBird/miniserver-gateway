@@ -16,6 +16,7 @@
 
 # App dependencies
 import pjon_cython as pjon
+import libscrc
 import time
 
 # App libs
@@ -24,7 +25,7 @@ from miniserver_gateway.connectors.fb_bus.fb_bus_connector_interface import (
     FbBusConnectorInterface,
 )
 from miniserver_gateway.connectors.fb_bus.transport.transport import TransportInterface
-from miniserver_gateway.connectors.fb_bus.types.types import Packets
+from miniserver_gateway.connectors.fb_bus.types.types import Packets, PacketsContents, ProtocolVersions
 from miniserver_gateway.connectors.fb_bus.utilities.packets_helper import PacketsHelper
 
 
@@ -49,9 +50,7 @@ class PjonTransportSettings:
 
     def __init__(self, config: dict) -> None:
         self.__address = int(config.get("address", self.__MASTER_ADDRESS))
-        self.__serial_interface = config.get(
-            "serial_interface", self.__SERIAL_INTERFACE
-        )
+        self.__serial_interface = config.get("serial_interface", self.__SERIAL_INTERFACE)
         self.__baud_rate = int(config.get("baud_rate", self.__SERIAL_BAUD_RATE))
 
     # -----------------------------------------------------------------------------
@@ -109,9 +108,18 @@ class PjonTransport(TransportInterface, pjon.ThroughSerialAsync):
 
     # -----------------------------------------------------------------------------
 
-    def send_packet(
-        self, address: int, payload: list, waiting_time: float = 0.0
-    ) -> bool:
+    def send_packet(self, address: int, payload: list, waiting_time: float = 0.0) -> bool:
+        # Add protocol version into packet
+        payload: list = [ProtocolVersions(ProtocolVersions.PROTOCOL_V1).value] + payload
+
+        crc16 = libscrc.ibm(bytes(payload))
+
+        payload.append(crc16 >> 8)
+        payload.append(crc16 & 0xFF)
+
+        # Be sure to set the null terminator!!!
+        payload.append(PacketsContents(PacketsContents.FB_CONTENT_TERMINATOR).value)
+
         self.send(address, bytes(payload))
 
         # if result != pjon.PJON_ACK:
@@ -146,15 +154,13 @@ class PjonTransport(TransportInterface, pjon.ThroughSerialAsync):
 
         if address == pjon.PJON_BROADCAST:
             log.debug(
-                "Successfully sent broadcast packet: {}".format(
-                    PacketsHelper.get_packet_name(Packets(payload[0]))
-                )
+                "Successfully sent broadcast packet: {}".format(PacketsHelper.get_packet_name(Packets(payload[1])))
             )
 
         else:
             log.debug(
                 "Successfully sent packet: {} for device with address: {}".format(
-                    PacketsHelper.get_packet_name(Packets(payload[0])), address
+                    PacketsHelper.get_packet_name(Packets(payload[1])), address
                 )
             )
 
@@ -191,7 +197,7 @@ class PjonTransport(TransportInterface, pjon.ThroughSerialAsync):
 
     # -----------------------------------------------------------------------------
 
-    def receive(self, payload: str, length: int, packet_info) -> None:
+    def receive(self, raw_payload: str, length: int, packet_info) -> None:
         try:
             # Get sender address from header
             sender_address: int = int(packet_info["sender_id"])
@@ -200,9 +206,29 @@ class PjonTransport(TransportInterface, pjon.ThroughSerialAsync):
             # Sender address is not present in header
             sender_address: None = None
 
-        if Packets.has_value(int(payload[0])) is False:
+        if ProtocolVersions.has_value(int(raw_payload[0])) is False:
+            log.warn("Received unknown protocol version")
+
+            return
+
+        if Packets.has_value(int(raw_payload[1])) is False:
             log.warn("Received unknown packet")
 
             return
 
-        self.__connector.receive(sender_address, payload, length)
+        calculated_crc = libscrc.ibm(bytes(raw_payload[0:(length - 3)]))
+        in_packet_crc: int = (int(raw_payload[length - 3]) << 8) | int(raw_payload[length - 2])
+
+        if calculated_crc != in_packet_crc:
+            log.warn("Invalid CRC check: {} vs {}".format(calculated_crc, in_packet_crc))
+
+            return
+
+        if raw_payload[-1] != PacketsContents(PacketsContents.FB_CONTENT_TERMINATOR).value:
+            log.warn("Missing packet terminator")
+
+            return
+
+        payload: str = raw_payload[1:(length - 3)]
+
+        self.__connector.receive(sender_address, payload, len(payload))

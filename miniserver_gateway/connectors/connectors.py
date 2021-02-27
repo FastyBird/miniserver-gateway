@@ -36,7 +36,6 @@ from miniserver_gateway.connectors.queue import (
     CreateOrUpdateChannelConfigurationQueueItem,
     DeleteChannelConfigurationQueueItem,
 )
-from miniserver_gateway.constants import LOG_LEVEL
 from miniserver_gateway.db.cache import (
     device_property_cache,
     channel_property_cache,
@@ -58,10 +57,10 @@ from miniserver_gateway.events.dispatcher import app_dispatcher
 from miniserver_gateway.exceptions.invalid_argument import InvalidArgumentException
 from miniserver_gateway.storages.events import StoragePropertyStoredEvent
 from miniserver_gateway.triggers.events import TriggerActionFiredEvent
+from miniserver_gateway.types.types import ModulesOrigins
 from miniserver_gateway.utils.libraries import LibrariesUtils
 from miniserver_gateway.utils.properties import PropertiesUtils
 
-logging.basicConfig(level=LOG_LEVEL)
 log = logging.getLogger("connectors")
 
 
@@ -116,12 +115,8 @@ class Connectors(Thread):
 
         self.__settings = ConnectorsSettings(config)
 
-        app_dispatcher.add_listener(
-            StoragePropertyStoredEvent.EVENT_NAME, self.__publish_storage_value_event
-        )
-        app_dispatcher.add_listener(
-            TriggerActionFiredEvent.EVENT_NAME, self.__publish_trigger_value_event
-        )
+        app_dispatcher.add_listener(StoragePropertyStoredEvent.EVENT_NAME, self.__publish_storage_value_event)
+        app_dispatcher.add_listener(TriggerActionFiredEvent.EVENT_NAME, self.__publish_trigger_value_event)
 
         # Queue for consuming incoming data from connectors
         self.__queue = Queue(maxsize=1000)
@@ -146,22 +141,22 @@ class Connectors(Thread):
                 if isinstance(record, CreateOrUpdateDeviceQueueItem):
                     self.__process_device_record(record)
 
-                elif isinstance(
-                    record, CreateOrUpdateDeviceConfigurationQueueItem
-                ) or isinstance(record, DeleteDeviceConfigurationQueueItem):
+                elif isinstance(record, CreateOrUpdateDeviceConfigurationQueueItem) or isinstance(
+                    record, DeleteDeviceConfigurationQueueItem
+                ):
                     self.__process_device_configuration_record(record)
 
-                elif isinstance(
-                    record, CreateOrUpdateChannelPropertyQueueItem
-                ) or isinstance(record, DeleteChannelPropertyQueueItem):
+                elif isinstance(record, CreateOrUpdateChannelPropertyQueueItem) or isinstance(
+                    record, DeleteChannelPropertyQueueItem
+                ):
                     self.__process_channel_property_record(record)
 
                 elif isinstance(record, UpdatePropertyExpectedQueueItem):
                     self.__process_property_expected_record(record)
 
-                elif isinstance(
-                    record, CreateOrUpdateChannelConfigurationQueueItem
-                ) or isinstance(record, DeleteChannelConfigurationQueueItem):
+                elif isinstance(record, CreateOrUpdateChannelConfigurationQueueItem) or isinstance(
+                    record, DeleteChannelConfigurationQueueItem
+                ):
                     self.__process_channel_configuration_record(record)
 
             if self.__stopped and self.__queue.empty():
@@ -216,28 +211,17 @@ class Connectors(Thread):
     # -----------------------------------------------------------------------------
 
     def add_or_edit_device(
-        self,
-        connector_id: uuid.UUID,
-        device_id: uuid.UUID,
-        identifier: str,
-        state: DeviceStates,
-        **kwargs
+        self, connector_id: uuid.UUID, device_id: uuid.UUID, identifier: str, state: DeviceStates, **kwargs
     ) -> None:
         try:
             self.__queue.put(
                 CreateOrUpdateDeviceQueueItem(
-                    connector_id=connector_id,
-                    device_id=device_id,
-                    identifier=identifier,
-                    state=state,
-                    **kwargs
+                    connector_id=connector_id, device_id=device_id, identifier=identifier, state=state, **kwargs
                 )
             )
 
         except QueueFull:
-            log.error(
-                "Connectors processing queue is full. New messages could not be added"
-            )
+            log.error("Connectors processing queue is full. New messages could not be added")
 
     # -----------------------------------------------------------------------------
 
@@ -261,22 +245,16 @@ class Connectors(Thread):
             )
 
         except QueueFull:
-            log.error(
-                "Connectors processing queue is full. New messages could not be added"
-            )
+            log.error("Connectors processing queue is full. New messages could not be added")
 
     # -----------------------------------------------------------------------------
 
     def delete_device_configuration(self, configuration_id: uuid.UUID) -> None:
         try:
-            self.__queue.put(
-                DeleteDeviceConfigurationQueueItem(configuration_id=configuration_id)
-            )
+            self.__queue.put(DeleteDeviceConfigurationQueueItem(configuration_id=configuration_id))
 
         except QueueFull:
-            log.error(
-                "Connectors processing queue is full. New messages could not be added"
-            )
+            log.error("Connectors processing queue is full. New messages could not be added")
 
     # -----------------------------------------------------------------------------
 
@@ -302,9 +280,7 @@ class Connectors(Thread):
             )
 
         except QueueFull:
-            log.error(
-                "Connectors processing queue is full. New messages could not be added"
-            )
+            log.error("Connectors processing queue is full. New messages could not be added")
 
     # -----------------------------------------------------------------------------
 
@@ -313,9 +289,7 @@ class Connectors(Thread):
             self.__queue.put(DeleteChannelPropertyQueueItem(property_id=property_id))
 
         except QueueFull:
-            log.error(
-                "Connectors processing queue is full. New messages could not be added"
-            )
+            log.error("Connectors processing queue is full. New messages could not be added")
 
     # -----------------------------------------------------------------------------
 
@@ -341,22 +315,16 @@ class Connectors(Thread):
             )
 
         except QueueFull:
-            log.error(
-                "Connectors processing queue is full. New messages could not be added"
-            )
+            log.error("Connectors processing queue is full. New messages could not be added")
 
     # -----------------------------------------------------------------------------
 
     def delete_channel_configuration(self, configuration_id: uuid.UUID) -> None:
         try:
-            self.__queue.put(
-                DeleteChannelConfigurationQueueItem(configuration_id=configuration_id)
-            )
+            self.__queue.put(DeleteChannelConfigurationQueueItem(configuration_id=configuration_id))
 
         except QueueFull:
-            log.error(
-                "Connectors processing queue is full. New messages could not be added"
-            )
+            log.error("Connectors processing queue is full. New messages could not be added")
 
     # -----------------------------------------------------------------------------
 
@@ -372,6 +340,7 @@ class Connectors(Thread):
             app_dispatcher.dispatch(
                 ConnectorPropertyValueEvent.EVENT_NAME,
                 ConnectorPropertyValueEvent(
+                    ModulesOrigins(ModulesOrigins.DEVICES_MODULE),
                     device_property,
                     PropertiesUtils.normalize_value(device_property, actual_value),
                     PropertiesUtils.normalize_value(device_property, previous_value),
@@ -379,11 +348,7 @@ class Connectors(Thread):
             )
 
         else:
-            log.warning(
-                "Device property: {} was not found in registry".format(
-                    property_id.__str__()
-                )
-            )
+            log.warning("Device property: {} was not found in registry".format(property_id.__str__()))
 
     # -----------------------------------------------------------------------------
 
@@ -399,6 +364,7 @@ class Connectors(Thread):
             app_dispatcher.dispatch(
                 ConnectorPropertyValueEvent.EVENT_NAME,
                 ConnectorPropertyValueEvent(
+                    ModulesOrigins(ModulesOrigins.DEVICES_MODULE),
                     channel_property,
                     PropertiesUtils.normalize_value(channel_property, actual_value),
                     PropertiesUtils.normalize_value(channel_property, previous_value),
@@ -406,11 +372,7 @@ class Connectors(Thread):
             )
 
         else:
-            log.warning(
-                "Channel property: {} was not found in registry".format(
-                    property_id.__str__()
-                )
-            )
+            log.warning("Channel property: {} was not found in registry".format(property_id.__str__()))
 
     # -----------------------------------------------------------------------------
 
@@ -437,9 +399,7 @@ class Connectors(Thread):
             self.__queue.put(UpdatePropertyExpectedQueueItem(item=item, expected=value))
 
         except QueueFull:
-            log.error(
-                "Connectors processing queue is full. New messages could not be added"
-            )
+            log.error("Connectors processing queue is full. New messages could not be added")
 
     # -----------------------------------------------------------------------------
 
@@ -453,22 +413,17 @@ class Connectors(Thread):
             connector_classname = self.__settings.get_class_by_type(connector.type)
 
             if connector_classname is None:
-                log.error(
-                    "Classname for configured connector: {} is not configured".format(
-                        connector.type
-                    )
-                )
+                log.error("Classname for configured connector: {} is not configured".format(connector.type))
                 continue
 
             try:
                 # Try to import connector class
-                connector_class = LibrariesUtils.check_and_import_connector(
-                    connector.type, connector_classname
-                )
+                connector_class = LibrariesUtils.check_and_import_connector(connector.type, connector_classname)
 
-                connector_module: ConnectorInterface = connector_class(self, connector)
+                if connector_class is not None:
+                    connector_module: ConnectorInterface = connector_class(self, connector)
 
-                self.__connectors.add(connector_module)
+                    self.__connectors.add(connector_module)
 
             except Exception as e:
                 log.error("Error on loading connector:")
@@ -481,9 +436,7 @@ class Connectors(Thread):
         device: DeviceEntity or None = DeviceEntity.get(device_id=record.device_id)
 
         if device is None:
-            connector: ConnectorEntity = ConnectorEntity.get(
-                connector_id=record.connector_id
-            )
+            connector: ConnectorEntity = ConnectorEntity.get(connector_id=record.connector_id)
 
             device: DeviceEntity = DeviceEntity(
                 device_id=record.device_id,
@@ -498,15 +451,11 @@ class Connectors(Thread):
             if "connector_params" in record.attributes.keys():
                 connector_params = record.attributes.get("connector_params")
 
-            DeviceConnectorEntity(
-                device=device, connector=connector, params=connector_params
-            )
+            DeviceConnectorEntity(device=device, connector=connector, params=connector_params)
 
         else:
             if "connector_params" in record.attributes.keys():
-                device_connector: DeviceConnectorEntity = DeviceConnectorEntity.get(
-                    device=device
-                )
+                device_connector: DeviceConnectorEntity = DeviceConnectorEntity.get(device=device)
                 device_connector.params = record.attributes.get("connector_params")
 
         self.__update_device_entity(device, **record.attributes)
@@ -516,38 +465,29 @@ class Connectors(Thread):
     @orm.db_session
     def __process_device_configuration_record(
         self,
-        record: CreateOrUpdateDeviceConfigurationQueueItem
-        or DeleteDeviceConfigurationQueueItem,
+        record: CreateOrUpdateDeviceConfigurationQueueItem or DeleteDeviceConfigurationQueueItem,
     ) -> None:
         if isinstance(record, CreateOrUpdateDeviceConfigurationQueueItem):
             device: DeviceEntity or None = DeviceEntity.get(device_id=record.device_id)
 
             if device is not None:
-                device_configuration: DeviceConfigurationEntity or None = (
-                    DeviceConfigurationEntity.get(
-                        configuration_id=record.configuration_id
-                    )
+                device_configuration: DeviceConfigurationEntity or None = DeviceConfigurationEntity.get(
+                    configuration_id=record.configuration_id
                 )
 
                 if device_configuration is None:
-                    device_configuration: DeviceConfigurationEntity = (
-                        DeviceConfigurationEntity(
-                            device=device,
-                            configuration_id=record.configuration_id,
-                            key=EntityKeyHash.encode(int(time.time_ns() / 1000)),
-                            identifier=record.configuration_identifier,
-                            data_type=record.data_type,
-                        )
+                    device_configuration: DeviceConfigurationEntity = DeviceConfigurationEntity(
+                        device=device,
+                        configuration_id=record.configuration_id,
+                        key=EntityKeyHash.encode(int(time.time_ns() / 1000)),
+                        identifier=record.configuration_identifier,
+                        data_type=record.data_type,
                     )
 
-                self.__update_channel_configuration_entity(
-                    device_configuration, **record.attributes
-                )
+                self.__update_channel_configuration_entity(device_configuration, **record.attributes)
 
         elif isinstance(record, DeleteDeviceConfigurationQueueItem):
-            device_configuration: DeviceConfigurationEntity = (
-                DeviceConfigurationEntity.get(id=record.configuration_id)
-            )
+            device_configuration: DeviceConfigurationEntity = DeviceConfigurationEntity.get(id=record.configuration_id)
 
             if device_configuration is not None:
                 device_configuration.delete()
@@ -560,16 +500,13 @@ class Connectors(Thread):
     @orm.db_session
     def __process_channel_property_record(
         self,
-        record: CreateOrUpdateChannelPropertyQueueItem
-        or DeleteChannelPropertyQueueItem,
+        record: CreateOrUpdateChannelPropertyQueueItem or DeleteChannelPropertyQueueItem,
     ) -> None:
         if isinstance(record, CreateOrUpdateChannelPropertyQueueItem):
             device: DeviceEntity = DeviceEntity.get(device_id=record.device_id)
 
             if device is not None:
-                channel: ChannelEntity = ChannelEntity.get(
-                    channel_id=record.channel_id, device=device
-                )
+                channel: ChannelEntity = ChannelEntity.get(channel_id=record.channel_id, device=device)
 
                 if channel is None:
                     channel: ChannelEntity = ChannelEntity(
@@ -579,9 +516,7 @@ class Connectors(Thread):
                         identifier=record.channel_identifier,
                     )
 
-                channel_property: ChannelPropertyEntity = ChannelPropertyEntity.get(
-                    property_id=record.property_id
-                )
+                channel_property: ChannelPropertyEntity = ChannelPropertyEntity.get(property_id=record.property_id)
 
                 if channel_property is None:
                     channel_property: ChannelPropertyEntity = ChannelPropertyEntity(
@@ -593,17 +528,13 @@ class Connectors(Thread):
                         queryable=record.attributes.get("queryable", False),
                     )
 
-                self.__update_channel_property_entity(
-                    channel_property, **record.attributes
-                )
+                self.__update_channel_property_entity(channel_property, **record.attributes)
 
                 # Refresh repository cache
                 channel_property_cache.clear_cache()
 
         elif isinstance(record, DeleteChannelPropertyQueueItem):
-            channel_property: ChannelPropertyEntity = ChannelPropertyEntity.get(
-                property_id=record.property_id
-            )
+            channel_property: ChannelPropertyEntity = ChannelPropertyEntity.get(property_id=record.property_id)
 
             if channel_property is not None:
                 channel_property.delete()
@@ -616,18 +547,11 @@ class Connectors(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def __process_property_expected_record(
-        self, record: UpdatePropertyExpectedQueueItem
-    ) -> None:
+    def __process_property_expected_record(self, record: UpdatePropertyExpectedQueueItem) -> None:
         expected = record.expected_value
 
-        if (
-            record.item.data_type != DataType.DATA_TYPE_BOOLEAN
-            or record.expected_value != "toggle"
-        ):
-            expected = PropertiesUtils.normalize_value(
-                record.item, record.expected_value
-            )
+        if record.item.data_type != DataType.DATA_TYPE_BOOLEAN or record.expected_value != "toggle":
+            expected = PropertiesUtils.normalize_value(record.item, record.expected_value)
 
         # Process all registered connectors...
         for connector in self.__connectors:
@@ -639,50 +563,37 @@ class Connectors(Thread):
     @orm.db_session
     def __process_channel_configuration_record(
         self,
-        record: CreateOrUpdateChannelConfigurationQueueItem
-        or DeleteChannelConfigurationQueueItem,
+        record: CreateOrUpdateChannelConfigurationQueueItem or DeleteChannelConfigurationQueueItem,
     ) -> None:
         if isinstance(record, CreateOrUpdateChannelConfigurationQueueItem):
             device: DeviceEntity or None = DeviceEntity.get(device_id=record.device_id)
 
             if device is not None:
-                channel: ChannelEntity = ChannelEntity.get(
-                    channel_id=record.channel_id, device=device
-                )
+                channel: ChannelEntity = ChannelEntity.get(channel_id=record.channel_id, device=device)
 
                 if channel is None:
-                    log.warning(
-                        "Channel with id: {} is not configured yet".format(
-                            record.channel_id.__str__()
-                        )
-                    )
+                    log.warning("Channel with id: {} is not configured yet".format(record.channel_id.__str__()))
 
                     return
 
-                channel_configuration: ChannelConfigurationEntity or None = (
-                    ChannelConfigurationEntity.get(
-                        configuration_id=record.configuration_id
-                    )
+                channel_configuration: ChannelConfigurationEntity or None = ChannelConfigurationEntity.get(
+                    configuration_id=record.configuration_id
                 )
 
                 if channel_configuration is None:
-                    channel_configuration: ChannelConfigurationEntity = (
-                        ChannelConfigurationEntity(
-                            channel=channel,
-                            configuration_id=record.configuration_id,
-                            key=EntityKeyHash.encode(int(time.time_ns() / 1000)),
-                            identifier=record.configuration_identifier,
-                            data_type=record.data_type,
-                        )
+                    channel_configuration: ChannelConfigurationEntity = ChannelConfigurationEntity(
+                        channel=channel,
+                        configuration_id=record.configuration_id,
+                        key=EntityKeyHash.encode(int(time.time_ns() / 1000)),
+                        identifier=record.configuration_identifier,
+                        data_type=record.data_type,
                     )
 
-                self.__update_channel_configuration_entity(
-                    channel_configuration, **record.attributes
-                )
+                self.__update_channel_configuration_entity(channel_configuration, **record.attributes)
 
         elif isinstance(record, DeleteChannelConfigurationQueueItem):
-            channel_configuration: ChannelConfigurationEntity = (
-                ChannelConfigurationEntity.get(id=record.configuration_id)
+            channel_configuration: ChannelConfigurationEntity = ChannelConfigurationEntity.get(
+                id=record.configuration_id
             )
 
             if channel_configuration is not None:
@@ -708,9 +619,7 @@ class Connectors(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def __update_channel_property_entity(
-        self, channel_property: ChannelPropertyEntity, **kwargs
-    ) -> bool:
+    def __update_channel_property_entity(self, channel_property: ChannelPropertyEntity, **kwargs) -> bool:
         available_attributes: List[str] = [
             "settable",
             "queryable",
@@ -723,17 +632,13 @@ class Connectors(Thread):
 
     # -----------------------------------------------------------------------------
 
-    def __update_device_configuration_entity(
-        self, channel_configuration: DeviceConfigurationEntity, **kwargs
-    ) -> bool:
+    def __update_device_configuration_entity(self, channel_configuration: DeviceConfigurationEntity, **kwargs) -> bool:
         available_attributes: List[str] = [
             "default",
             "value",
         ]
 
-        return self.__update_entity(
-            channel_configuration, available_attributes, **kwargs
-        )
+        return self.__update_entity(channel_configuration, available_attributes, **kwargs)
 
     # -----------------------------------------------------------------------------
 
@@ -745,16 +650,12 @@ class Connectors(Thread):
             "value",
         ]
 
-        return self.__update_entity(
-            channel_configuration, available_attributes, **kwargs
-        )
+        return self.__update_entity(channel_configuration, available_attributes, **kwargs)
 
     # -----------------------------------------------------------------------------
 
     @staticmethod
-    def __update_entity(
-        entity: orm.Entity, available_attributes: List[str], **kwargs
-    ) -> bool:
+    def __update_entity(entity: orm.Entity, available_attributes: List[str], **kwargs) -> bool:
         update_values: Dict[str, str or int or bool] = {}
 
         # Parse all provided keys & values
@@ -793,7 +694,5 @@ class ConnectorInterface(ABC, Thread):
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def publish(
-        self, property_id: uuid.UUID, expected: bool or int or float or str or None
-    ) -> str:
+    def publish(self, property_id: uuid.UUID, expected: bool or int or float or str or None) -> str:
         pass

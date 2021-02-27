@@ -59,13 +59,9 @@ class WebsocketsServer(Thread):
 
         fam = socket.AF_INET6 if host is None else 0
 
-        host_info = socket.getaddrinfo(
-            host, port, fam, socket.SOCK_STREAM, socket.IPPROTO_TCP, socket.AI_PASSIVE
-        )
+        host_info = socket.getaddrinfo(host, port, fam, socket.SOCK_STREAM, socket.IPPROTO_TCP, socket.AI_PASSIVE)
 
-        self.__server_socket = socket.socket(
-            host_info[0][0], host_info[0][1], host_info[0][2]
-        )
+        self.__server_socket = socket.socket(host_info[0][0], host_info[0][1], host_info[0][2])
         self.__server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.__server_socket.bind(host_info[0][4])
         self.__server_socket.listen(self.__request_queue_size)
@@ -121,9 +117,7 @@ class WebsocketsServer(Thread):
                 writers.append(fileno)
 
         if self.__select_interval:
-            r_list, w_list, x_list = select(
-                self.__listeners, writers, self.__listeners, self.__select_interval
-            )
+            r_list, w_list, x_list = select(self.__listeners, writers, self.__listeners, self.__select_interval)
 
         else:
             r_list, w_list, x_list = select(self.__listeners, writers, self.__listeners)

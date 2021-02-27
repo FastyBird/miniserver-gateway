@@ -44,9 +44,10 @@ setup(
               "miniserver_gateway.db", "miniserver_gateway.events", "miniserver_gateway.exceptions",
               "miniserver_gateway.exchanges", "miniserver_gateway.exchanges.websockets",
               "miniserver_gateway.storages", "miniserver_gateway.triggers",
-              "miniserver_gateway.utils",
+              "miniserver_gateway.types", "miniserver_gateway.utils",
               ],
     install_requires=[
+        "libscrc",
         "pjon_cython",
         "pony",
         "PyYAML",

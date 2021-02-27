@@ -41,9 +41,7 @@ class SettingEntity(ABC):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-        self, index: uuid.UUID, device_id: uuid.UUID, setting_address: int
-    ) -> None:
+    def __init__(self, index: uuid.UUID, device_id: uuid.UUID, setting_address: int) -> None:
         self.__id = index
         self.__device_id = device_id
         self.__address = setting_address
@@ -83,16 +81,10 @@ class SettingEntity(ABC):
     # -----------------------------------------------------------------------------
 
     def set_data_type(self, data_type: DataTypes) -> None:
-        if (
-            data_type == DataTypes.FB_DATA_TYPE_UINT8
-            or data_type == DataTypes.FB_DATA_TYPE_INT8
-        ):
+        if data_type == DataTypes.FB_DATA_TYPE_UINT8 or data_type == DataTypes.FB_DATA_TYPE_INT8:
             self.__size = 1
 
-        elif (
-            data_type == DataTypes.FB_DATA_TYPE_UINT16
-            or data_type == DataTypes.FB_DATA_TYPE_INT16
-        ):
+        elif data_type == DataTypes.FB_DATA_TYPE_UINT16 or data_type == DataTypes.FB_DATA_TYPE_INT16:
             self.__size = 2
 
         elif (
@@ -147,9 +139,7 @@ class RegisterSettingEntity(SettingEntity):
 
     # -----------------------------------------------------------------------------
 
-    def set_register(
-        self, register_address: int, register_type: RegistersTypes
-    ) -> None:
+    def set_register(self, register_address: int, register_type: RegistersTypes) -> None:
         self.__register_address = register_address
         self.__register_type = register_type
 

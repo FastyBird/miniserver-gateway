@@ -44,18 +44,12 @@ class LibrariesUtils:
     # -----------------------------------------------------------------------------
 
     @staticmethod
-    def check_and_import_connector(
-        extension_type: str, module_name: str
-    ) -> ABCMeta or None:
+    def check_and_import_connector(extension_type: str, module_name: str) -> ABCMeta or None:
         if LibrariesUtils.loaded_connector_libraries.get(module_name) is None:
             base_dir: str = path.dirname(path.dirname(__file__))
 
             extensions_paths: List[str] = [
-                path.abspath(
-                    base_dir
-                    + "/connectors/".replace("/", path.sep)
-                    + extension_type.lower()
-                ),
+                path.abspath(base_dir + "/connectors/".replace("/", path.sep) + extension_type.lower()),
             ]
 
             extension_class = LibrariesUtils.load_module(module_name, extensions_paths)
@@ -182,14 +176,10 @@ class LibrariesUtils:
 
         if version.lower() == "upgrade":
             try:
-                result = check_call(
-                    [executable, "-m", "pip", "install", package, "--upgrade", "--user"]
-                )
+                result = check_call([executable, "-m", "pip", "install", package, "--upgrade", "--user"])
 
             except CalledProcessError:
-                result = check_call(
-                    [executable, "-m", "pip", "install", package, "--upgrade"]
-                )
+                result = check_call([executable, "-m", "pip", "install", package, "--upgrade"])
 
         else:
             from pkg_resources import get_distribution

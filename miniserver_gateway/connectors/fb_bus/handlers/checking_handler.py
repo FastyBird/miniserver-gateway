@@ -19,13 +19,11 @@ import time
 
 # App libs
 from miniserver_gateway.connectors.connectors import log
-from miniserver_gateway.connectors.fb_bus.fb_bus_connector_interface import (
-    FbBusConnectorInterface,
-)
+from miniserver_gateway.connectors.fb_bus.fb_bus_connector_interface import FbBusConnectorInterface
 from miniserver_gateway.connectors.fb_bus.entities.device import DeviceEntity
 from miniserver_gateway.connectors.fb_bus.handlers.handler import Handler
 from miniserver_gateway.connectors.fb_bus.utilities.helpers import Helpers
-from miniserver_gateway.connectors.fb_bus.types.types import Packets, PacketsContents
+from miniserver_gateway.connectors.fb_bus.types.types import Packets
 from miniserver_gateway.db.types import DeviceStates
 
 
@@ -40,12 +38,8 @@ from miniserver_gateway.db.types import DeviceStates
 class CheckingHandler(Handler):
     __connector: FbBusConnectorInterface
 
-    __MAX_TRANSMIT_ATTEMPTS: int = (
-        5  # Maximum count of sending packets before gateway mark device as lost
-    )
-    __PING_DELAY: float = (
-        15.0  # Delay in s after reaching maximum packet sending attempts
-    )
+    __MAX_TRANSMIT_ATTEMPTS: int = 5  # Maximum count of sending packets before gateway mark device as lost
+    __PING_DELAY: float = 15.0  # Delay in s after reaching maximum packet sending attempts
 
     # -----------------------------------------------------------------------------
 
@@ -54,24 +48,28 @@ class CheckingHandler(Handler):
 
     # -----------------------------------------------------------------------------
 
-    def receive(
-        self, packet: Packets, sender_address: int, payload: str, length: int
-    ) -> None:
+    def receive(self, packet: Packets, sender_address: int, payload: str, length: int) -> None:
+        # Get device info from registry
+        device: DeviceEntity or None = self.__connector.get_device_by_address(sender_address)
+
+        if device is None:
+            return
+
         # Device responded to PING
         if packet == Packets.FB_PACKET_PONG:
-            self.__pong_receiver(sender_address)
+            self.__pong_receiver(device)
 
         # Device responded to set state request
         elif packet == Packets.FB_PACKET_GET_STATE:
-            self.__get_state_receiver(sender_address, payload, length)
+            self.__get_state_receiver(device, payload)
 
         # Device responded to set state request
         elif packet == Packets.FB_PACKET_SET_STATE:
-            self.__set_state_receiver(sender_address, payload, length)
+            self.__set_state_receiver(device, payload)
 
         # Device reported state
         elif packet == Packets.FB_PACKET_REPORT_STATE:
-            self.__report_state_receiver(sender_address, payload, length)
+            self.__report_state_receiver(device, payload)
 
     # -----------------------------------------------------------------------------
 
@@ -81,14 +79,10 @@ class CheckingHandler(Handler):
             was_lost: bool = device.get_lost_timestamp() > 0
 
             if was_lost is True:
-                log.debug(
-                    "Device with address: {} is still lost".format(device.get_address())
-                )
+                log.debug("Device with address: {} is still lost".format(device.get_address()))
 
             else:
-                log.debug(
-                    "Device with address: {} is lost".format(device.get_address())
-                )
+                log.debug("Device with address: {} is lost".format(device.get_address()))
 
             device.set_state(DeviceStates(DeviceStates.STATE_LOST))
 
@@ -112,15 +106,11 @@ class CheckingHandler(Handler):
 
     def __send_ping_handler(self, device: DeviceEntity) -> None:
         # 0 => Packet identifier
-        # 1 => Packet null terminator
         output_content: list = [
             Packets(Packets.FB_PACKET_PING).value,
-            PacketsContents(PacketsContents.FB_CONTENT_TERMINATOR).value,
         ]
 
-        result: bool = self.__connector.send_packet(
-            device.get_address(), output_content
-        )
+        result: bool = self.__connector.send_packet(device.get_address(), output_content)
 
         if result is True:
             # Mark that gateway is waiting for reply from device...
@@ -144,10 +134,8 @@ class CheckingHandler(Handler):
 
     def __send_get_device_state_handler(self, device: DeviceEntity) -> None:
         # 0 => Packet identifier
-        # 1 => Packet null terminator
         output_content: list = [
             Packets(Packets.FB_PACKET_GET_STATE).value,
-            PacketsContents(PacketsContents.FB_CONTENT_TERMINATOR).value,
         ]
 
         # Increment communication counter...
@@ -159,9 +147,7 @@ class CheckingHandler(Handler):
 
         self.__connector.update_device(device)
 
-        result: bool = self.__connector.send_packet(
-            device.get_address(), output_content, 1
-        )
+        result: bool = self.__connector.send_packet(device.get_address(), output_content, 1)
 
         if result is False:
             # Mark that gateway is not waiting any reply from device...
@@ -173,17 +159,8 @@ class CheckingHandler(Handler):
 
     # PAYLOAD:
     # 0 => Received packet identifier   => FB_PACKET_PONG
-    # 1 => Packet null terminator       => FB_PACKET_TERMINATOR
 
-    def __pong_receiver(self, sender_address: int) -> None:
-        # Get device info from registry
-        device: DeviceEntity or None = self.__connector.get_device_by_address(
-            sender_address
-        )
-
-        if device is None:
-            return
-
+    def __pong_receiver(self, device: DeviceEntity) -> None:
         # Bring device back alive
         device.set_alive()
 
@@ -195,26 +172,9 @@ class CheckingHandler(Handler):
 
     # PAYLOAD:
     # 0 => Received packet identifier   => FB_PACKET_GET_STATE
-    # 1 => Device current state         => FB_PACKET_TERMINATOR
-    # 2 => Packet null terminator       => FB_PACKET_TERMINATOR
+    # 1 => Device current state
 
-    def __get_state_receiver(
-        self, sender_address: int, payload: str, payload_length: int
-    ) -> None:
-        # Get device info from registry
-        device: DeviceEntity or None = self.__connector.get_device_by_address(
-            sender_address
-        )
-
-        if device is None:
-            return
-
-        # Validate packet structure
-        if payload_length != 3:
-            log.warn("Packet structure is invalid. Packet length is not as expected")
-
-            return
-
+    def __get_state_receiver(self, device: DeviceEntity, payload: str) -> None:
         # Set received state
         device.set_state(Helpers.transform_state_for_gateway(int(payload[1])))
 
@@ -226,50 +186,18 @@ class CheckingHandler(Handler):
 
     # PAYLOAD:
     # 0 => Received packet identifier   => FB_PACKET_SET_STATE
-    # 1 => Device current state         => FB_PACKET_TERMINATOR
-    # 2 => Packet null terminator       => FB_PACKET_TERMINATOR
+    # 1 => Device current state
 
-    def __set_state_receiver(
-        self, sender_address: int, payload: str, payload_length: int
-    ) -> None:
-        # Get device info from registry
-        device: DeviceEntity or None = self.__connector.get_device_by_address(
-            sender_address
-        )
-
-        if device is None:
-            return
-
-        # Validate packet structure
-        if payload_length != 3:
-            log.warn("Packet structure is invalid. Packet length is not as expected")
-
-            return
+    def __set_state_receiver(self, device: DeviceEntity, payload: str) -> None:
+        pass
 
     # -----------------------------------------------------------------------------
 
     # PAYLOAD:
     # 0 => Received packet identifier   => FB_PACKET_SET_STATE
-    # 1 => Device current state         => FB_PACKET_TERMINATOR
-    # 2 => Packet null terminator       => FB_PACKET_TERMINATOR
+    # 1 => Device current state
 
-    def __report_state_receiver(
-        self, sender_address: int, payload: str, payload_length: int
-    ) -> None:
-        # Get device info from registry
-        device: DeviceEntity or None = self.__connector.get_device_by_address(
-            sender_address
-        )
-
-        if device is None:
-            return
-
-        # Validate packet structure
-        if payload_length != 3:
-            log.warn("Packet structure is invalid. Packet length is not as expected")
-
-            return
-
+    def __report_state_receiver(self, device: DeviceEntity, payload: str) -> None:
         # Set received state
         device.set_state(Helpers.transform_state_for_gateway(int(payload[1])))
 

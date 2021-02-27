@@ -16,7 +16,6 @@
 
 # App dependencies
 from abc import ABC, abstractmethod
-from typing import Tuple
 
 
 #
@@ -35,9 +34,7 @@ class TransportInterface(ABC):
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def send_packet(
-        self, address: int, payload: list, waiting_time: float = 0.0
-    ) -> bool:
+    def send_packet(self, address: int, payload: list, waiting_time: float = 0.0) -> bool:
         pass
 
     # -----------------------------------------------------------------------------

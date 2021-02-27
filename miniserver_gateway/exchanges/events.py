@@ -20,6 +20,7 @@ from whistle import Event
 
 # App libs
 from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
+from miniserver_gateway.types.types import ModulesOrigins
 
 
 #
@@ -31,6 +32,7 @@ from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
 # @author         Adam Kadlec <adam.kadlec@fastybird.com>
 #
 class ExchangePropertyExpectedValueEvent(ABC, Event):
+    __origin: ModulesOrigins
     __record: DevicePropertyItem or ChannelPropertyItem
     __expected: str or int or float or bool
 
@@ -40,11 +42,19 @@ class ExchangePropertyExpectedValueEvent(ABC, Event):
 
     def __init__(
         self,
+        origin: ModulesOrigins,
         record: DevicePropertyItem or ChannelPropertyItem,
         expected: str or int or float or bool,
     ) -> None:
+        self.__origin = origin
         self.__record = record
         self.__expected = expected
+
+    # -----------------------------------------------------------------------------
+
+    @property
+    def origin(self) -> ModulesOrigins:
+        return self.__origin
 
     # -----------------------------------------------------------------------------
 

@@ -14,27 +14,25 @@
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
 
-# App libs
-from abc import ABC, abstractmethod
-
-# App libs
-from miniserver_gateway.connectors.fb_bus.entities.device import DeviceEntity
-from miniserver_gateway.connectors.fb_bus.types.types import Packets
+# App dependencies
+from enum import Enum, unique
 
 
 #
-# FB bus handler
+# Modules origins string
 #
 # @package        FastyBird:MiniServer!
-# @subpackage     Connectors
+# @subpackage     Types
 #
 # @author         Adam Kadlec <adam.kadlec@fastybird.com>
 #
-class Handler(ABC):
-    @abstractmethod
-    def receive(self, packet: Packets, sender_address: int, payload: str, length: int) -> None:
-        pass
+@unique
+class ModulesOrigins(Enum):
+    DEVICES_MODULE: str = "com.fastybird.devices-module"
+    AUTH_MODULE: str = "com.fastybird.auth-module"
+    TRIGGERS_MODULE: str = "com.fastybird.triggers-module"
+    UI_MODULE: str = "com.fastybird.ui-module"
 
-    @abstractmethod
-    def handle(self, device: DeviceEntity) -> None:
-        pass
+    @classmethod
+    def has_value(cls, value: str) -> bool:
+        return value in cls._value2member_map_

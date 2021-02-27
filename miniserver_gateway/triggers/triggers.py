@@ -21,7 +21,6 @@ from threading import Thread
 from queue import Queue, Full as QueueFull
 
 # App libs
-from miniserver_gateway.constants import LOG_LEVEL
 from miniserver_gateway.events.dispatcher import app_dispatcher
 from miniserver_gateway.connectors.events import ConnectorPropertyValueEvent
 from miniserver_gateway.db.cache import (
@@ -37,8 +36,8 @@ from miniserver_gateway.triggers.cache import (
 )
 from miniserver_gateway.triggers.events import TriggerActionFiredEvent
 from miniserver_gateway.triggers.queue import FireTriggerActionQueueItem
+from miniserver_gateway.types.types import ModulesOrigins
 
-logging.basicConfig(level=LOG_LEVEL)
 log = logging.getLogger("triggers")
 
 
@@ -60,9 +59,7 @@ class Trigger(Thread):
     def __init__(self) -> None:
         Thread.__init__(self)
 
-        app_dispatcher.add_listener(
-            ConnectorPropertyValueEvent.EVENT_NAME, self.__check_connector_value_event
-        )
+        app_dispatcher.add_listener(ConnectorPropertyValueEvent.EVENT_NAME, self.__check_connector_value_event)
 
         # Queue for consuming incoming data from connectors
         self.__queue = Queue(maxsize=1000)
@@ -103,13 +100,8 @@ class Trigger(Thread):
     # -----------------------------------------------------------------------------
 
     def __check_connector_value_event(self, event: ConnectorPropertyValueEvent) -> None:
-        if isinstance(event.record, DevicePropertyItem) or isinstance(
-            event.record, ChannelPropertyItem
-        ):
-            if (
-                event.previous_value is not None
-                and event.previous_value == event.actual_value
-            ):
+        if isinstance(event.record, DevicePropertyItem) or isinstance(event.record, ChannelPropertyItem):
+            if event.previous_value is not None and event.previous_value == event.actual_value:
                 return
 
             for trigger in self.__triggers:
@@ -118,14 +110,10 @@ class Trigger(Thread):
                 if trigger.is_fulfilled and not trigger.is_triggered:
                     try:
                         for action in trigger.actions.values():
-                            self.__queue.put(
-                                FireTriggerActionQueueItem(trigger, action)
-                            )
+                            self.__queue.put(FireTriggerActionQueueItem(trigger, action))
 
                     except QueueFull:
-                        log.error(
-                            "Triggers processing queue is full. New messages could not be added"
-                        )
+                        log.error("Triggers processing queue is full. New messages could not be added")
 
     # -----------------------------------------------------------------------------
 
@@ -137,27 +125,27 @@ class Trigger(Thread):
             return
 
         if isinstance(action, DevicePropertyActionItem):
-            property_item = device_property_cache.get_property_by_key(
-                action.device_property
-            )
+            property_item = device_property_cache.get_property_by_key(action.device_property)
 
             if property_item is not None:
                 app_dispatcher.dispatch(
                     TriggerActionFiredEvent.EVENT_NAME,
-                    TriggerActionFiredEvent(property_item, action.value),
+                    TriggerActionFiredEvent(
+                        ModulesOrigins(ModulesOrigins.TRIGGERS_MODULE), property_item, action.value
+                    ),
                 )
 
                 log.debug("Triggering trigger action for device property")
 
         elif isinstance(action, ChannelPropertyActionItem):
-            property_item = channel_property_cache.get_property_by_key(
-                action.channel_property
-            )
+            property_item = channel_property_cache.get_property_by_key(action.channel_property)
 
             if property_item is not None:
                 app_dispatcher.dispatch(
                     TriggerActionFiredEvent.EVENT_NAME,
-                    TriggerActionFiredEvent(property_item, action.value),
+                    TriggerActionFiredEvent(
+                        ModulesOrigins(ModulesOrigins.TRIGGERS_MODULE), property_item, action.value
+                    ),
                 )
 
                 log.debug("Triggering trigger action for channel property")

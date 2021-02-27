@@ -132,9 +132,7 @@ class TriggerItem:
 
     # -----------------------------------------------------------------------------
 
-    def check_property_item(
-        self, item: DevicePropertyItem or ChannelPropertyItem, value: str
-    ) -> None:
+    def check_property_item(self, item: DevicePropertyItem or ChannelPropertyItem, value: str) -> None:
         if isinstance(item, DevicePropertyItem):
             for condition in self.__device_property_conditions.values():
                 if condition.device_property == item.key:
@@ -254,9 +252,7 @@ class PropertyConditionItem(ABC):
 
     # -----------------------------------------------------------------------------
 
-    def validate(
-        self, item: DevicePropertyItem or ChannelPropertyItem, value: str
-    ) -> bool:
+    def validate(self, item: DevicePropertyItem or ChannelPropertyItem, value: str) -> bool:
         normalized_value = PropertiesUtils.normalize_value(item, value)
         normalized_operand = PropertiesUtils.normalize_value(item, self.operand)
 
@@ -374,9 +370,7 @@ class PropertyActionItem(ABC):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(
-        self, action_id: uuid.UUID, enabled: bool, value: str, device: str
-    ) -> None:
+    def __init__(self, action_id: uuid.UUID, enabled: bool, value: str, device: str) -> None:
         self.__action_id = action_id
         self.__enabled = enabled
 
@@ -412,9 +406,7 @@ class PropertyActionItem(ABC):
 
     # -----------------------------------------------------------------------------
 
-    def validate(
-        self, item: DevicePropertyItem or ChannelPropertyItem, value: str
-    ) -> bool:
+    def validate(self, item: DevicePropertyItem or ChannelPropertyItem, value: str) -> bool:
         if self.__value == "toggle":
             self.__is_triggered = False
 

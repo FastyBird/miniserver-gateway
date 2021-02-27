@@ -136,9 +136,7 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
         # When connector is closing...
         for device_id in self.__devices:
             # ...set device state to disconnected
-            self.__devices[device_id].set_state(
-                DeviceStates(DeviceStates.STATE_DISCONNECTED)
-            )
+            self.__devices[device_id].set_state(DeviceStates(DeviceStates.STATE_DISCONNECTED))
 
         # And update device state in gateway
         for device_id in self.__devices:
@@ -165,10 +163,7 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
 
                     # Continue processing devices
                     for device_id in self.__devices:
-                        if (
-                            self.__devices[device_id].get_id().__str__()
-                            not in self.__processed_devices
-                        ):
+                        if self.__devices[device_id].get_id().__str__() not in self.__processed_devices:
                             self.__checking_handler.handle(self.__devices[device_id])
                             self.__reading_handler.handle(self.__devices[device_id])
 
@@ -183,15 +178,10 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
 
     # -----------------------------------------------------------------------------
 
-    def publish(
-        self, property_id: uuid.UUID, expected: bool or int or float or str or None
-    ) -> None:
+    def publish(self, property_id: uuid.UUID, expected: bool or int or float or str or None) -> None:
         for register in self.__registers.values():
             if register.get_id() == property_id:
-                if (
-                    register.get_type() == RegistersTypes.FB_REGISTER_DO
-                    and expected == "toggle"
-                ):
+                if register.get_type() == RegistersTypes.FB_REGISTER_DO and expected == "toggle":
                     expected: bool = False if register.get_value() is True else True
 
                 self.__writing_handler.write_value_to_register(register, expected)
@@ -202,10 +192,7 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
         # Get packet identifier from payload
         packet_id: Packets = Packets(int(payload[0]))
 
-        if (
-            sender_address != self.ADDRESS_NOT_ASSIGNED
-            and not self.__pairing_helper.is_pairing_enabled()
-        ):
+        if sender_address != self.ADDRESS_NOT_ASSIGNED and not self.__pairing_helper.is_pairing_enabled():
             device: DeviceEntity or None = self.get_device_by_address(sender_address)
 
             if device is None:
@@ -256,9 +243,7 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
 
     # -----------------------------------------------------------------------------
 
-    def send_packet(
-        self, address: int, payload: list, waiting_time: float = 0.0
-    ) -> bool:
+    def send_packet(self, address: int, payload: list, waiting_time: float = 0.0) -> bool:
         return self.__transport.send_packet(address, payload, waiting_time)
 
     # -----------------------------------------------------------------------------
@@ -285,17 +270,15 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
         )
 
         for register_type in RegistersTypes:
-            registers: List[RegisterEntity] = self.get_registers_by_type(
-                device, register_type
-            )
+            registers: List[RegisterEntity] = self.get_registers_by_type(device, register_type)
 
             for register in registers:
                 self.propagate_register(register)
 
         for setting_type in SettingsTypes:
-            settings: List[
-                DeviceSettingEntity or RegisterSettingEntity
-            ] = self.get_settings_by_type(device, setting_type)
+            settings: List[DeviceSettingEntity or RegisterSettingEntity] = self.get_settings_by_type(
+                device, setting_type
+            )
 
             for setting in settings:
                 self.propagate_setting(setting)
@@ -316,9 +299,7 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
             channel_identifier: str = "ao-{:0>2d}".format(register.get_address() + 1)
 
         else:
-            channel_identifier: str = "unknown-{:0>2d}".format(
-                register.get_address() + 1
-            )
+            channel_identifier: str = "unknown-{:0>2d}".format(register.get_address() + 1)
 
         self.__container.add_or_edit_channel_property(
             device_id=register.get_device_id(),
@@ -338,24 +319,18 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
 
     # -----------------------------------------------------------------------------
 
-    def propagate_setting(
-        self, setting: DeviceSettingEntity or RegisterSettingEntity
-    ) -> None:
+    def propagate_setting(self, setting: DeviceSettingEntity or RegisterSettingEntity) -> None:
         if isinstance(setting, DeviceSettingEntity):
             self.__container.add_or_edit_device_configuration(
                 device_id=setting.get_device_id(),
                 # Setting configuration
                 configuration_id=setting.get_id(),
-                configuration_identifier="{}-{}".format(
-                    setting.get_name(), setting.get_address() + 1
-                ),
+                configuration_identifier="{}-{}".format(setting.get_name(), setting.get_address() + 1),
                 data_type=DataTypeHelper.transform_for_gateway(setting),
             )
 
         else:
-            device: DeviceEntity or None = self.get_device_by_id(
-                setting.get_device_id()
-            )
+            device: DeviceEntity or None = self.get_device_by_id(setting.get_device_id())
 
             if device is None:
                 return
@@ -373,9 +348,7 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
                 channel_id=register.get_channel_id(),
                 # Setting configuration
                 configuration_id=setting.get_id(),
-                configuration_identifier="{}-{}".format(
-                    setting.get_name(), setting.get_address() + 1
-                ),
+                configuration_identifier="{}-{}".format(setting.get_name(), setting.get_address() + 1),
                 data_type=DataTypeHelper.transform_for_gateway(setting),
             )
 
@@ -433,13 +406,9 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
                 break
 
         if free_address is None:
-            raise InvalidStateException(
-                "New device with SN: {} could not be created".format(serial_number)
-            )
+            raise InvalidStateException("New device with SN: {} could not be created".format(serial_number))
 
-        device: DeviceEntity = DeviceEntity(
-            uuid.uuid4(), free_address, serial_number, max_packet_length
-        )
+        device: DeviceEntity = DeviceEntity(uuid.uuid4(), free_address, serial_number, max_packet_length)
 
         device.set_state(DeviceStates(DeviceStates.STATE_CONNECTED))
 
@@ -455,16 +424,11 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
 
     # -----------------------------------------------------------------------------
 
-    def get_registers_by_type(
-        self, device: DeviceEntity, register_type: RegistersTypes
-    ) -> List[RegisterEntity]:
+    def get_registers_by_type(self, device: DeviceEntity, register_type: RegistersTypes) -> List[RegisterEntity]:
         registers: List[RegisterEntity] = []
 
         for register in self.__registers.values():
-            if (
-                register.get_device_id() == device.get_id()
-                and register.get_type() == register_type
-            ):
+            if register.get_device_id() == device.get_id() and register.get_type() == register_type:
                 registers.append(register)
 
         return registers
@@ -564,18 +528,12 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
     ) -> DeviceSettingEntity or RegisterSettingEntity or None:
         if setting_type == SettingsTypes.FB_SETTINGS_DEVICE:
             for register in self.__devices_settings.values():
-                if (
-                    register.get_device_id() == device.get_id()
-                    and register.get_address() == setting_address
-                ):
+                if register.get_device_id() == device.get_id() and register.get_address() == setting_address:
                     return register
 
         elif setting_type == SettingsTypes.FB_SETTINGS_REGISTER:
             for register in self.__registers_settings.values():
-                if (
-                    register.get_device_id() == device.get_id()
-                    and register.get_address() == setting_address
-                ):
+                if register.get_device_id() == device.get_id() and register.get_address() == setting_address:
                     return register
 
         return None
@@ -607,30 +565,22 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
 
     # -----------------------------------------------------------------------------
 
-    def update_setting(
-        self, updated_setting: DeviceSettingEntity or RegisterSettingEntity
-    ) -> None:
+    def update_setting(self, updated_setting: DeviceSettingEntity or RegisterSettingEntity) -> None:
         if (
             isinstance(updated_setting, DeviceSettingEntity)
             and updated_setting.get_id().__str__() in self.__devices_settings
         ):
-            self.__devices_settings[
-                updated_setting.get_id().__str__()
-            ] = updated_setting
+            self.__devices_settings[updated_setting.get_id().__str__()] = updated_setting
 
         elif (
             isinstance(updated_setting, RegisterSettingEntity)
             and updated_setting.get_id().__str__() in self.__registers_settings
         ):
-            self.__registers_settings[
-                updated_setting.get_id().__str__()
-            ] = updated_setting
+            self.__registers_settings[updated_setting.get_id().__str__()] = updated_setting
 
     # -----------------------------------------------------------------------------
 
-    def delete_setting(
-        self, deleted_setting: DeviceSettingEntity or RegisterSettingEntity
-    ) -> None:
+    def delete_setting(self, deleted_setting: DeviceSettingEntity or RegisterSettingEntity) -> None:
         if (
             isinstance(deleted_setting, DeviceSettingEntity)
             and deleted_setting.get_id().__str__() in self.__devices_settings
@@ -665,11 +615,7 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
             lambda cd: cd.connector.connector_id == self.__connector.connector_id
         ):
             try:
-                device_connector_params: dict = (
-                    connector_device.params
-                    if connector_device.params is not None
-                    else {}
-                )
+                device_connector_params: dict = connector_device.params if connector_device.params is not None else {}
 
                 device: DeviceEntity = DeviceEntity(
                     connector_device.device.device_id,
@@ -715,25 +661,17 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
 
                         if channel_property.data_type == DataType.DATA_TYPE_BOOLEAN:
                             if channel_property.settable is True:
-                                register_type: RegistersTypes = RegistersTypes(
-                                    RegistersTypes.FB_REGISTER_DO
-                                )
+                                register_type: RegistersTypes = RegistersTypes(RegistersTypes.FB_REGISTER_DO)
 
                             else:
-                                register_type: RegistersTypes = RegistersTypes(
-                                    RegistersTypes.FB_REGISTER_DI
-                                )
+                                register_type: RegistersTypes = RegistersTypes(RegistersTypes.FB_REGISTER_DI)
 
                         else:
                             if channel_property.settable is True:
-                                register_type: RegistersTypes = RegistersTypes(
-                                    RegistersTypes.FB_REGISTER_AO
-                                )
+                                register_type: RegistersTypes = RegistersTypes(RegistersTypes.FB_REGISTER_AO)
 
                             else:
-                                register_type: RegistersTypes = RegistersTypes(
-                                    RegistersTypes.FB_REGISTER_AI
-                                )
+                                register_type: RegistersTypes = RegistersTypes(RegistersTypes.FB_REGISTER_AI)
 
                         device_registers.add(
                             RegisterEntity(
@@ -777,9 +715,7 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
                         )
 
                         setting.set_name(setting_prefix)
-                        setting.set_data_type(
-                            DataTypeHelper.transform_for_device(channel_configuration)
-                        )
+                        setting.set_data_type(DataTypeHelper.transform_for_device(channel_configuration))
                         setting.set_value(channel_configuration.value)
 
                         registers_settings.add(setting)
@@ -787,19 +723,13 @@ class FbBusConnector(ConnectorInterface, FbBusConnectorInterface, Thread):
                 self.__devices[device.get_id().__str__()] = device
 
                 for device_register in device_registers:
-                    self.__registers[
-                        device_register.get_id().__str__()
-                    ] = device_register
+                    self.__registers[device_register.get_id().__str__()] = device_register
 
                 for device_setting in device_settings:
-                    self.__devices_settings[
-                        device_setting.get_id().__str__()
-                    ] = device_setting
+                    self.__devices_settings[device_setting.get_id().__str__()] = device_setting
 
                 for register_setting in registers_settings:
-                    self.__registers_settings[
-                        register_setting.get_id().__str__()
-                    ] = register_setting
+                    self.__registers_settings[register_setting.get_id().__str__()] = register_setting
 
             except Exception as e:
                 log.error("Error on loading connector device:")

@@ -56,9 +56,7 @@ class DeviceEntity:
     __fw_version: str or None = None
 
     __waiting_for_packet: Packets or None = None
-    __last_packet_sent_timestamp: float = (
-        0.0  # Timestamp when request was sent to the device
-    )
+    __last_packet_sent_timestamp: float = 0.0  # Timestamp when request was sent to the device
 
     __attempts: int = 0
 
@@ -268,9 +266,7 @@ class DeviceEntity:
 
     # -----------------------------------------------------------------------------
 
-    def set_reading_register(
-        self, register_address: int, register_type: RegistersTypes
-    ) -> None:
+    def set_reading_register(self, register_address: int, register_type: RegistersTypes) -> None:
         self.__reading_register_address = register_address
         self.__reading_register_type = register_type
 
@@ -281,17 +277,19 @@ class DeviceEntity:
 
     # -----------------------------------------------------------------------------
 
-    def reset_reading_register(self) -> None:
-        self.__reading_registers_timestamp = time.time()
+    def reset_reading_register(self, reset_timestamp: bool = False) -> None:
+        if reset_timestamp:
+            self.__reading_registers_timestamp = 0.0
+
+        else:
+            self.__reading_registers_timestamp = time.time()
 
         self.__reading_register_address = None
         self.__reading_register_type = None
 
     # -----------------------------------------------------------------------------
 
-    def set_reading_setting(
-        self, setting_address: int, setting_type: SettingsTypes
-    ) -> None:
+    def set_reading_setting(self, setting_address: int, setting_type: SettingsTypes) -> None:
         self.__reading_setting_address = setting_address
         self.__reading_setting_type = setting_type
 
@@ -302,8 +300,12 @@ class DeviceEntity:
 
     # -----------------------------------------------------------------------------
 
-    def reset_reading_setting(self) -> None:
-        self.__reading_settings_timestamp = time.time()
+    def reset_reading_setting(self, reset_timestamp: bool = False) -> None:
+        if reset_timestamp:
+            self.__reading_settings_timestamp = 0.0
+
+        else:
+            self.__reading_settings_timestamp = time.time()
 
         self.__reading_setting_address = None
         self.__reading_setting_type = None

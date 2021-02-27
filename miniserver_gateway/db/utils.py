@@ -46,7 +46,7 @@ class EntityKeyHash:
         while True:
             bcp = int(pow(EntityKeyHash.BASE, t))
             a = int(n / bcp) % EntityKeyHash.BASE
-            s.append(EntityKeyHash.ALPHABET[a : a + 1])
+            s.append(EntityKeyHash.ALPHABET[a:a + 1])
             n = n - (a * bcp)
             t -= 1
 
@@ -66,7 +66,7 @@ class EntityKeyHash:
 
         while True:
             bcpow = int(pow(EntityKeyHash.BASE, l - t))
-            s = s + EntityKeyHash.ALPHABET.index(n[t : t + 1]) * bcpow
+            s = s + EntityKeyHash.ALPHABET.index(n[t:t + 1]) * bcpow
             t += 1
             if t > l:
                 break

@@ -20,6 +20,7 @@ from abc import ABC
 # App libs
 from miniserver_gateway.db.cache import DevicePropertyItem, ChannelPropertyItem
 from miniserver_gateway.exchanges.types import RoutingKeys
+from miniserver_gateway.types.types import ModulesOrigins
 
 
 #
@@ -31,6 +32,7 @@ from miniserver_gateway.exchanges.types import RoutingKeys
 # @author         Adam Kadlec <adam.kadlec@fastybird.com>
 #
 class PublishPropertyValueQueueItem(ABC):
+    __origin: ModulesOrigins
     __item: DevicePropertyItem or ChannelPropertyItem
     __value: bool or int or float or str or None
     __expected_value: bool or int or float or str or None
@@ -40,16 +42,24 @@ class PublishPropertyValueQueueItem(ABC):
 
     def __init__(
         self,
+        origin: ModulesOrigins,
         item: DevicePropertyItem or ChannelPropertyItem,
         value: bool or int or float or str or None,
         expected_value: bool or int or float or str or None,
         is_pending: bool,
     ) -> None:
+        self.__origin = origin
         self.__item = item
 
         self.__value = value
         self.__expected_value = expected_value
         self.__is_pending = is_pending
+
+    # -----------------------------------------------------------------------------
+
+    @property
+    def origin(self) -> ModulesOrigins:
+        return self.__origin
 
     # -----------------------------------------------------------------------------
 
@@ -85,12 +95,20 @@ class PublishPropertyValueQueueItem(ABC):
 # @author         Adam Kadlec <adam.kadlec@fastybird.com>
 #
 class PublishEntityQueueItem:
+    __origin: ModulesOrigins
     __routing_key: RoutingKeys
     __content: dict
 
-    def __init__(self, routing_key: RoutingKeys, content: dict) -> None:
+    def __init__(self, origin: ModulesOrigins, routing_key: RoutingKeys, content: dict) -> None:
+        self.__origin = origin
         self.__routing_key = routing_key
         self.__content = content
+
+    # -----------------------------------------------------------------------------
+
+    @property
+    def origin(self) -> ModulesOrigins:
+        return self.__origin
 
     # -----------------------------------------------------------------------------
 

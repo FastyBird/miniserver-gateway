@@ -20,17 +20,11 @@ from typing import List
 
 # App libs
 from miniserver_gateway.connectors.connectors import log
-from miniserver_gateway.connectors.fb_bus.fb_bus_connector_interface import (
-    FbBusConnectorInterface,
-)
+from miniserver_gateway.connectors.fb_bus.fb_bus_connector_interface import FbBusConnectorInterface
 from miniserver_gateway.connectors.fb_bus.entities.device import DeviceEntity
 from miniserver_gateway.connectors.fb_bus.entities.register import RegisterEntity
 from miniserver_gateway.connectors.fb_bus.handlers.handler import Handler
-from miniserver_gateway.connectors.fb_bus.types.types import (
-    Packets,
-    PacketsContents,
-    RegistersTypes,
-)
+from miniserver_gateway.connectors.fb_bus.types.types import Packets, RegistersTypes
 from miniserver_gateway.connectors.fb_bus.utilities.helpers import RegistersHelper
 from miniserver_gateway.exceptions.invalid_argument import InvalidArgumentException
 
@@ -55,12 +49,16 @@ class ReadingHandler(Handler):
 
     # -----------------------------------------------------------------------------
 
-    def receive(
-        self, packet: Packets, sender_address: int, payload: str, length: int
-    ) -> None:
+    def receive(self, packet: Packets, sender_address: int, payload: str, length: int) -> None:
+        # Get device info from registry
+        device: DeviceEntity or None = self.__connector.get_device_by_address(sender_address)
+
+        if device is None:
+            return
+
         # About device info
         if packet == Packets.FB_PACKET_READ_MULTIPLE_REGISTERS:
-            self.__read_multiple_registers_receiver(sender_address, payload, length)
+            self.__read_multiple_registers_receiver(device, payload, length)
 
         elif packet == Packets.FB_PACKET_READ_SINGLE_REGISTER:
             pass
@@ -77,8 +75,7 @@ class ReadingHandler(Handler):
             device.get_waiting_for_packet() is None
             or (
                 device.get_waiting_for_packet() is not None
-                and time.time() - device.get_last_packet_timestamp()
-                >= self.__READING_DELAY
+                and time.time() - device.get_last_packet_timestamp() >= self.__READING_DELAY
             )
         ) and time.time() - device.get_last_register_reading_timestamp() >= device.get_sampling_time():
             self.__read_handler(device)
@@ -91,88 +88,52 @@ class ReadingHandler(Handler):
         if reading_register_type is not None:
             if reading_register_type == RegistersTypes.FB_REGISTER_DI:
                 if (
-                    len(
-                        self.__connector.get_registers_by_type(
-                            device, RegistersTypes(RegistersTypes.FB_REGISTER_DO)
-                        )
-                    )
+                    len(self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_DO)))
                     > 0
                 ):
-                    device.set_reading_register(
-                        0, RegistersTypes(RegistersTypes.FB_REGISTER_DO)
-                    )
+                    device.set_reading_register(0, RegistersTypes(RegistersTypes.FB_REGISTER_DO))
 
                     return
 
                 elif (
-                    len(
-                        self.__connector.get_registers_by_type(
-                            device, RegistersTypes(RegistersTypes.FB_REGISTER_AI)
-                        )
-                    )
+                    len(self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_AI)))
                     > 0
                 ):
-                    device.set_reading_register(
-                        0, RegistersTypes(RegistersTypes.FB_REGISTER_AI)
-                    )
+                    device.set_reading_register(0, RegistersTypes(RegistersTypes.FB_REGISTER_AI))
 
                     return
 
                 elif (
-                    len(
-                        self.__connector.get_registers_by_type(
-                            device, RegistersTypes(RegistersTypes.FB_REGISTER_AO)
-                        )
-                    )
+                    len(self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_AO)))
                     > 0
                 ):
-                    device.set_reading_register(
-                        0, RegistersTypes(RegistersTypes.FB_REGISTER_AO)
-                    )
+                    device.set_reading_register(0, RegistersTypes(RegistersTypes.FB_REGISTER_AO))
 
                     return
 
             elif reading_register_type == RegistersTypes.FB_REGISTER_DO:
                 if (
-                    len(
-                        self.__connector.get_registers_by_type(
-                            device, RegistersTypes(RegistersTypes.FB_REGISTER_AI)
-                        )
-                    )
+                    len(self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_AI)))
                     > 0
                 ):
-                    device.set_reading_register(
-                        0, RegistersTypes(RegistersTypes.FB_REGISTER_AI)
-                    )
+                    device.set_reading_register(0, RegistersTypes(RegistersTypes.FB_REGISTER_AI))
 
                     return
 
                 elif (
-                    len(
-                        self.__connector.get_registers_by_type(
-                            device, RegistersTypes(RegistersTypes.FB_REGISTER_AO)
-                        )
-                    )
+                    len(self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_AO)))
                     > 0
                 ):
-                    device.set_reading_register(
-                        0, RegistersTypes(RegistersTypes.FB_REGISTER_AO)
-                    )
+                    device.set_reading_register(0, RegistersTypes(RegistersTypes.FB_REGISTER_AO))
 
                     return
 
             elif reading_register_type == RegistersTypes.FB_REGISTER_AI:
                 if (
-                    len(
-                        self.__connector.get_registers_by_type(
-                            device, RegistersTypes(RegistersTypes.FB_REGISTER_AO)
-                        )
-                    )
+                    len(self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_AO)))
                     > 0
                 ):
-                    device.set_reading_register(
-                        0, RegistersTypes(RegistersTypes.FB_REGISTER_AO)
-                    )
+                    device.set_reading_register(0, RegistersTypes(RegistersTypes.FB_REGISTER_AO))
 
                     return
 
@@ -188,30 +149,22 @@ class ReadingHandler(Handler):
     ) -> None:
         if register_type == RegistersTypes.FB_REGISTER_DI:
             register_size: int = len(
-                self.__connector.get_registers_by_type(
-                    device, RegistersTypes(RegistersTypes.FB_REGISTER_DI)
-                )
+                self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_DI))
             )
 
         elif register_type == RegistersTypes.FB_REGISTER_DO:
             register_size: int = len(
-                self.__connector.get_registers_by_type(
-                    device, RegistersTypes(RegistersTypes.FB_REGISTER_DO)
-                )
+                self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_DO))
             )
 
         elif register_type == RegistersTypes.FB_REGISTER_AI:
             register_size: int = len(
-                self.__connector.get_registers_by_type(
-                    device, RegistersTypes(RegistersTypes.FB_REGISTER_AI)
-                )
+                self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_AI))
             )
 
         elif register_type == RegistersTypes.FB_REGISTER_AO:
             register_size: int = len(
-                self.__connector.get_registers_by_type(
-                    device, RegistersTypes(RegistersTypes.FB_REGISTER_AO)
-                )
+                self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_AO))
             )
 
         else:
@@ -226,7 +179,6 @@ class ReadingHandler(Handler):
         # 3 => Low byte of register address
         # 4 => High byte of registers length
         # 5 => Low byte of registers length
-        # 6 => Packet null terminator
         output_content: list = [
             Packets(Packets.FB_PACKET_READ_MULTIPLE_REGISTERS).value,
             register_type.value,
@@ -234,25 +186,17 @@ class ReadingHandler(Handler):
             start_address & 0xFF,
         ]
 
-        if (
-            register_type == RegistersTypes.FB_REGISTER_DI
-            or register_type == RegistersTypes.FB_REGISTER_DO
-        ):
+        if register_type == RegistersTypes.FB_REGISTER_DI or register_type == RegistersTypes.FB_REGISTER_DO:
             # Calculate maximum count registers per one packet
             # eg. max_packet_length = 24 => max_readable_registers_count = 144
             #   - 144 digital registers could be read in one packet
-            max_readable_registers_count: int = (device.get_max_packet_length() - 7) * 8
+            max_readable_registers_count: int = (device.get_max_packet_length() - 8) * 8
 
-        elif (
-            register_type == RegistersTypes.FB_REGISTER_AI
-            or register_type == RegistersTypes.FB_REGISTER_AO
-        ):
+        elif register_type == RegistersTypes.FB_REGISTER_AI or register_type == RegistersTypes.FB_REGISTER_AO:
             # Calculate maximum count registers per one packet
             # eg. max_packet_length = 24 => max_readable_registers_count = 4
             #   - only 4 analog registers could be read in one packet
-            max_readable_registers_count: int = (
-                device.get_max_packet_length() - 7
-            ) // 4
+            max_readable_registers_count: int = (device.get_max_packet_length() - 8) // 4
 
         else:
             return
@@ -283,19 +227,11 @@ class ReadingHandler(Handler):
         output_content.append(read_length >> 8)
         output_content.append(read_length & 0xFF)
 
-        output_content.append(
-            PacketsContents(PacketsContents.FB_CONTENT_TERMINATOR).value
-        )
-
-        result: bool = self.__connector.send_packet(
-            device.get_address(), output_content
-        )
+        result: bool = self.__connector.send_packet(device.get_address(), output_content)
 
         if result is True:
             # Mark that gateway is waiting for reply from device...
-            device.set_waiting_for_packet(
-                Packets(Packets.FB_PACKET_READ_MULTIPLE_REGISTERS)
-            )
+            device.set_waiting_for_packet(Packets(Packets.FB_PACKET_READ_MULTIPLE_REGISTERS))
             # ...and store send timestamp
             device.set_last_packet_timestamp(time.time())
             # ...and increment communication counter
@@ -318,53 +254,25 @@ class ReadingHandler(Handler):
     def __read_handler(self, device: DeviceEntity) -> None:
         reading_address, reading_register_type = device.get_reading_register()
 
-        if len(
-            self.__connector.get_registers_by_type(
-                device, RegistersTypes(RegistersTypes.FB_REGISTER_DI)
-            )
-        ) > 0 and (
-            reading_register_type == RegistersTypes.FB_REGISTER_DI
-            or reading_register_type is None
+        if len(self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_DI))) > 0 and (
+            reading_register_type == RegistersTypes.FB_REGISTER_DI or reading_register_type is None
         ):
-            self.__read_multiple_registers(
-                device, RegistersTypes(RegistersTypes.FB_REGISTER_DI), reading_address
-            )
+            self.__read_multiple_registers(device, RegistersTypes(RegistersTypes.FB_REGISTER_DI), reading_address)
 
         elif len(
-            self.__connector.get_registers_by_type(
-                device, RegistersTypes(RegistersTypes.FB_REGISTER_DO)
-            )
-        ) > 0 and (
-            reading_register_type == RegistersTypes.FB_REGISTER_DO
-            or reading_register_type is None
-        ):
-            self.__read_multiple_registers(
-                device, RegistersTypes(RegistersTypes.FB_REGISTER_DO), reading_address
-            )
+            self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_DO))
+        ) > 0 and (reading_register_type == RegistersTypes.FB_REGISTER_DO or reading_register_type is None):
+            self.__read_multiple_registers(device, RegistersTypes(RegistersTypes.FB_REGISTER_DO), reading_address)
 
         elif len(
-            self.__connector.get_registers_by_type(
-                device, RegistersTypes(RegistersTypes.FB_REGISTER_AI)
-            )
-        ) > 0 and (
-            reading_register_type == RegistersTypes.FB_REGISTER_AI
-            or reading_register_type is None
-        ):
-            self.__read_multiple_registers(
-                device, RegistersTypes(RegistersTypes.FB_REGISTER_AI), reading_address
-            )
+            self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_AI))
+        ) > 0 and (reading_register_type == RegistersTypes.FB_REGISTER_AI or reading_register_type is None):
+            self.__read_multiple_registers(device, RegistersTypes(RegistersTypes.FB_REGISTER_AI), reading_address)
 
         elif len(
-            self.__connector.get_registers_by_type(
-                device, RegistersTypes(RegistersTypes.FB_REGISTER_AO)
-            )
-        ) > 0 and (
-            reading_register_type == RegistersTypes.FB_REGISTER_AO
-            or reading_register_type is None
-        ):
-            self.__read_multiple_registers(
-                device, RegistersTypes(RegistersTypes.FB_REGISTER_AO), reading_address
-            )
+            self.__connector.get_registers_by_type(device, RegistersTypes(RegistersTypes.FB_REGISTER_AO))
+        ) > 0 and (reading_register_type == RegistersTypes.FB_REGISTER_AO or reading_register_type is None):
+            self.__read_multiple_registers(device, RegistersTypes(RegistersTypes.FB_REGISTER_AO), reading_address)
 
     # -----------------------------------------------------------------------------
 
@@ -375,19 +283,8 @@ class ReadingHandler(Handler):
     # 3     => Low byte of register address
     # 4     => Count of data bytes
     # 5-n   => Packet data
-    # n+1   => Packet null terminator           => FB_PACKET_TERMINATOR
 
-    def __read_multiple_registers_receiver(
-        self, sender_address: int, payload: str, payload_length: int
-    ) -> None:
-        # Get device info from registry
-        device: DeviceEntity or None = self.__connector.get_device_by_address(
-            sender_address
-        )
-
-        if device is None:
-            return
-
+    def __read_multiple_registers_receiver(self, device: DeviceEntity, payload: str, payload_length: int) -> None:
         if not RegistersTypes.has_value(int(payload[1])):
             log.warn("Received register type: {} is not valid".format(payload[1]))
 
@@ -402,23 +299,16 @@ class ReadingHandler(Handler):
         # Extract registers count
         bytes_length: int = int(payload[4])
 
-        if (
-            register_type == RegistersTypes.FB_REGISTER_DI
-            or register_type == RegistersTypes.FB_REGISTER_DO
-        ):
+        if register_type == RegistersTypes.FB_REGISTER_DI or register_type == RegistersTypes.FB_REGISTER_DO:
             position_byte: int = 5
 
             register_address: int = start_address
 
-            registers_count: int = len(
-                self.__connector.get_registers_by_type(device, register_type)
-            )
+            registers_count: int = len(self.__connector.get_registers_by_type(device, register_type))
 
-            while position_byte < (payload_length - 1):
+            while position_byte < payload_length:
                 # Fill the beginning with zeros to keep always full format
-                data_byte: List[str] = list(
-                    "{:0>8d}".format(int(str(bin(int(payload[position_byte])))[2:]))
-                )
+                data_byte: List[str] = list("{:0>8d}".format(int(str(bin(int(payload[position_byte])))[2:])))
                 # Rotate bits to respect bit vs address
                 data_byte.reverse()
 
@@ -439,15 +329,12 @@ class ReadingHandler(Handler):
 
                 position_byte += 1
 
-        elif (
-            register_type == RegistersTypes.FB_REGISTER_AI
-            or register_type == RegistersTypes.FB_REGISTER_AO
-        ):
+        elif register_type == RegistersTypes.FB_REGISTER_AI or register_type == RegistersTypes.FB_REGISTER_AO:
             position_byte: int = 5
 
             register_address: int = start_address
 
-            while (position_byte + 3) < (payload_length - 1):
+            while (position_byte + 3) < payload_length:
                 register: RegisterEntity = self.__connector.get_register_by_address(
                     device, register_type, register_address
                 )
@@ -460,10 +347,8 @@ class ReadingHandler(Handler):
                         int(payload[position_byte + 3]),
                     ]
 
-                    transformed: int or float or None = (
-                        RegistersHelper.transform_value_from_bytes(
-                            register, write_value
-                        )
+                    transformed: int or float or None = RegistersHelper.transform_value_from_bytes(
+                        register, write_value
                     )
 
                     if transformed is not None:

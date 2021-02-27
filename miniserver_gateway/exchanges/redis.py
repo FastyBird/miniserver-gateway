@@ -22,8 +22,8 @@ from redis.client import PubSub
 from threading import Thread
 
 # App libs
-from miniserver_gateway.constants import APP_ORIGIN
 from miniserver_gateway.exchanges.exchanges import log, Exchanges, ExchangeInterface
+from miniserver_gateway.types.types import ModulesOrigins
 
 
 #
@@ -103,9 +103,7 @@ class RedisExchange(ExchangeInterface, Thread):
 
         self.__settings = RedisExchangeSettings(config)
 
-        self.__redis_client = Redis(
-            host=self.__settings.host, port=self.__settings.port
-        )
+        self.__redis_client = Redis(host=self.__settings.host, port=self.__settings.port)
         self.__redis_pub_sub = self.__redis_client.pubsub()
 
         self.__redis_pub_sub.subscribe(self.__CHANNEL_NAME)
@@ -127,9 +125,7 @@ class RedisExchange(ExchangeInterface, Thread):
                 received_data = result.get("data", bytes("{}", "utf-8"))
 
                 if isinstance(received_data, bytes):
-                    self.__container.process_received_message(
-                        received_data.decode("utf-8")
-                    )
+                    self.__container.process_received_message(received_data.decode("utf-8"))
 
             sleep(0.001)
 
@@ -143,19 +139,13 @@ class RedisExchange(ExchangeInterface, Thread):
 
     # -----------------------------------------------------------------------------
 
-    def publish(self, routing_key: str, data: dict) -> None:
+    def publish(self, origin: ModulesOrigins, routing_key: str, data: dict) -> None:
         message: dict = {
             "routing_key": routing_key,
-            "origin": APP_ORIGIN,
+            "origin": origin.value,
             "data": data,
         }
 
-        result: int = self.__redis_client.publish(
-            self.__CHANNEL_NAME, json.dumps(message)
-        )
+        result: int = self.__redis_client.publish(self.__CHANNEL_NAME, json.dumps(message))
 
-        log.debug(
-            "Successfully published message to: {} consumers via Redis with key: {}".format(
-                result, routing_key
-            )
-        )
+        log.debug("Successfully published message to: {} consumers via Redis with key: {}".format(result, routing_key))

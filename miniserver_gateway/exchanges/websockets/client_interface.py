@@ -17,6 +17,9 @@
 # App dependencies
 from abc import ABC, abstractmethod
 
+# App libs
+from miniserver_gateway.exchanges.websockets.types import WampCodes
+
 
 class WampClientInterface(ABC):
     @abstractmethod
@@ -32,5 +35,11 @@ class WampClientInterface(ABC):
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def send_message(self, data: bytearray or str) -> None:
+    def send_message(self, message: str) -> None:
+        pass
+
+    # -----------------------------------------------------------------------------
+
+    @abstractmethod
+    def publish_message(self, message: str) -> None:
         pass

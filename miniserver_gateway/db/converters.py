@@ -63,9 +63,7 @@ class EnumConverter(Converter):
 
         self.__type = py_type
         self.__converter_class = self._get_real_converter(self.py_type)
-        self.__converter = self.__converter_class(
-            provider=self.provider, py_type=self.py_type, attr=self.attr
-        )
+        self.__converter = self.__converter_class(provider=self.provider, py_type=self.py_type, attr=self.attr)
 
     # -----------------------------------------------------------------------------
 

@@ -20,6 +20,9 @@ from enum import Enum, unique
 from pony.orm import core as orm
 from whistle import Event
 
+# App libs
+from miniserver_gateway.types.types import ModulesOrigins
+
 
 #
 # Action types
@@ -45,6 +48,7 @@ class EntityChangedType(Enum):
 # @author         Adam Kadlec <adam.kadlec@fastybird.com>
 #
 class DatabaseEntityChangedEvent(ABC, Event):
+    __origin: ModulesOrigins
     __entity: orm.Entity
     __action_type: EntityChangedType
 
@@ -52,9 +56,16 @@ class DatabaseEntityChangedEvent(ABC, Event):
 
     # -----------------------------------------------------------------------------
 
-    def __init__(self, entity: orm.Entity, action_type: EntityChangedType) -> None:
+    def __init__(self, origin: ModulesOrigins, entity: orm.Entity, action_type: EntityChangedType) -> None:
+        self.__origin = origin
         self.__entity = entity
         self.__action_type = action_type
+
+    # -----------------------------------------------------------------------------
+
+    @property
+    def origin(self) -> ModulesOrigins:
+        return self.__origin
 
     # -----------------------------------------------------------------------------
 

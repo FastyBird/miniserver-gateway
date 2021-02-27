@@ -61,9 +61,7 @@ class FbBusConnectorInterface(ABC):
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def send_packet(
-        self, address: int, payload: list, waiting_time: float = 0.0
-    ) -> bool:
+    def send_packet(self, address: int, payload: list, waiting_time: float = 0.0) -> bool:
         pass
 
     # -----------------------------------------------------------------------------
@@ -87,9 +85,7 @@ class FbBusConnectorInterface(ABC):
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def propagate_setting(
-        self, register: DeviceSettingEntity or RegisterSettingEntity
-    ) -> None:
+    def propagate_setting(self, register: DeviceSettingEntity or RegisterSettingEntity) -> None:
         pass
 
     # -----------------------------------------------------------------------------
@@ -131,9 +127,7 @@ class FbBusConnectorInterface(ABC):
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def get_registers_by_type(
-        self, device: DeviceEntity, register_type: RegistersTypes
-    ) -> List[RegisterEntity]:
+    def get_registers_by_type(self, device: DeviceEntity, register_type: RegistersTypes) -> List[RegisterEntity]:
         pass
 
     # -----------------------------------------------------------------------------
@@ -201,15 +195,11 @@ class FbBusConnectorInterface(ABC):
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def update_setting(
-        self, updated_setting: DeviceSettingEntity or RegisterSettingEntity
-    ) -> None:
+    def update_setting(self, updated_setting: DeviceSettingEntity or RegisterSettingEntity) -> None:
         pass
 
     # -----------------------------------------------------------------------------
 
     @abstractmethod
-    def delete_setting(
-        self, deleted_setting: DeviceSettingEntity or RegisterSettingEntity
-    ) -> None:
+    def delete_setting(self, deleted_setting: DeviceSettingEntity or RegisterSettingEntity) -> None:
         pass
